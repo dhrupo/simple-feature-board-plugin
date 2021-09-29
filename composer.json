@@ -1,0 +1,19 @@
+{
+  "name": "dhrupo/simple-feature-board",
+  "description": "This awesome plugin can helps you to manage multiple feature board with votes and comments.",
+  "type": "wordpress-plugin",
+  "license": "GPLv2",
+  "authors": [
+    {
+      "name": "dhrupo",
+      "email": "dhrupo@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "WPSFB\\Includes\\": "includes/"
+    }
+  }
+}
