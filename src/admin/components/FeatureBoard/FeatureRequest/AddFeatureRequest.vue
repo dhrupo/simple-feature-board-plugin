@@ -66,7 +66,7 @@ export default {
         return;
       }
       const formData = new FormData();
-      formData.append("action", "wpsfb_insert_feature_table");
+      formData.append("action", "wpsfb_insert_feature");
       formData.append("title", this.featureTitle);
       formData.append("details", this.featureDetails);
       formData.append("tags", this.featureTags);

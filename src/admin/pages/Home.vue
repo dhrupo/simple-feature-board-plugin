@@ -1,42 +1,46 @@
 <template>
   <div class="home">
-    <button class="btn" @click="$router.push('add_new_feature')">Add a new feature</button>
-    <FeatureLists :featureList='featureList' :error='error'></FeatureLists>
+    <FeatureBoardLists
+      :featureBoardList="featureBoardList"
+      :error="error"
+    ></FeatureBoardLists>
+    <!-- <FeatureLists :featureList="featureList" :error="error"></FeatureLists> -->
   </div>
 </template>
 
 <script>
-import axios from 'axios';
-import FeatureLists from '../components/FeatureLists.vue';
+import axios from "axios";
+import FeatureBoardLists from "../components/FeatureBoard/FeatureBoardLists.vue";
 export default {
-  name: 'Home',
+  name: "Home",
   components: {
-    FeatureLists
+    FeatureBoardLists,
   },
-  data () {
+  data() {
     return {
-      featureList: [],
-      error: ""
-    }
+      featureBoardList: [],
+      error: "",
+    };
   },
   methods: {
-    getFeatureList () {
+    getFeatureBoardList() {
       const formData = new FormData();
-      formData.append('action', 'wpsfb_get_features_list');
-      axios.post(ajax_url.ajaxurl, formData)
-      .then(res=> {
-        this.featureList = res.data.data;
-      })
-      .catch(err => {
-        error = "Error retriving data";
-        console.log(err);
-      });
+      formData.append("action", "wpsfb_get_features_board_list");
+      axios
+        .post(ajax_url.ajaxurl, formData)
+        .then((res) => {
+          this.featureBoardList = res.data.data;
+        })
+        .catch((err) => {
+          error = "Error retriving data";
+          console.log(err);
+        });
     },
   },
   created() {
-    this.getFeatureList();
-  }
-}
+    this.getFeatureBoardList();
+  },
+};
 </script>
 
 <style scoped>

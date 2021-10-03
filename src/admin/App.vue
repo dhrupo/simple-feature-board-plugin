@@ -1,13 +1,13 @@
 <template>
   <div id="vue-backend-app">
-    <router-view />    
+    <router-view />
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-  }
+  name: "App",
+};
 </script>
 
 <style>
@@ -25,7 +25,8 @@ export default {
 }
 
 .btn:hover {
-  background-color: #1f66a3;
+  background-color: #114777;
+  cursor: pointer;
 }
 
 .input-group {
@@ -45,6 +46,4 @@ export default {
 .input-group textarea {
   width: 100%;
 }
-</style>>
-
 </style>

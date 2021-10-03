@@ -7,7 +7,7 @@ class Shortcode
   function __construct()
   {
     // add_shortcode('wpsfb-shortcode', [$this, 'render_shortcode']);
-    add_shortcode('wpsfb-feature-shortcode', [$this, 'feature_shortcode']);
+    add_shortcode('wpsfb-feature-board', [$this, 'feature_board']);
   }
 
   public function render_shortcode($atts, $content = '')
@@ -18,14 +18,14 @@ class Shortcode
     return $content;
   }
 
-  public function feature_shortcode($atts = [])
+  public function feature_board($atts = [], $content = '')
   {
     global $wpdb;
     $atts = shortcode_atts(array(
       'id' => ''
     ), $atts);
 
-    $table_name = $wpdb->prefix . 'feature';
+    $table_name = $wpdb->prefix . 'sfb_features_board';
     if (!empty($atts['id'])) {
       $item = $wpdb->get_row(
         $wpdb->prepare(
@@ -33,12 +33,22 @@ class Shortcode
           $atts['id']
         )
       );
-?>
-      <div class="wpsfb-shortcode-wrapper">
-        <h1><?php echo esc_html($item->title); ?></h1>
-        <p><?php echo esc_html($item->details) ?></p>
-      </div>
-<?php
+
+      $content .= "<div class='wpsfb-shortcode-wrapper'>";
+
+      if ($item) {
+        // add_filter('wp_title', function ($item) {
+        //   return $item->title;
+        // });
+        $content .= '<h3>' . esc_html($item->title) . '</h3>';
+        $content .= '<p>' . esc_html($item->details) . '</p>';
+        $content .= "</div>";
+        return $content;
+      } else {
+        $content .= "<h3><?php echo 'No data found!' ?></h3>";
+        $content .= "</div>";
+        return $content;
+      }
     }
   }
 }

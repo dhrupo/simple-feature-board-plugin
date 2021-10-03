@@ -1,32 +1,39 @@
 <template>
   <div>
+    <div>
+      <button class="btn" @click="$router.go(-1)">Back</button>
+    </div>
+    <AddFeatureBoard
+      v-if="showAddModal"
+      @closeAdd="showAddModal = false"
+    ></AddFeatureBoard>
     <div v-if="error">{{ error }}</div>
-    <table v-if="!showEditModal" id="feature-table">
+    <table v-if="!showAddModal && !showEditModal" id="feature-table">
       <tr>
         <th>Feature Title</th>
         <th>Feature Details</th>
         <th>Feature Tags</th>
-        <th>Shortcode</th>
+        <th>Username</th>
         <th>Actions</th>
       </tr>
-      <tr v-for="(feature, index) in featureList" :key="feature.id">
+      <tr v-for="feature in featuresRequest" :key="feature.id">
         <td>{{ feature.title }}</td>
         <td>{{ feature.details }}</td>
         <td>{{ feature.tags }}</td>
+        <td>{{ feature.username }}</td>
         <td>
-          <div class="tooltip">
-            <input
-              ref="copycode"
-              class="input-tooltip"
-              readonly
-              @click="copyShortcode(index)"
-              @mouseleave="moveMove"
-              :value="`[wpsfb-feature-shortcode id=${feature.id}]`"
-            />
-            <span class="tooltip-text">{{ copyMessage }}</span>
-          </div>
-        </td>
-        <td>
+          <button
+            class="btn"
+            @click="
+              $router.push(
+                +feature.feature_board_id +
+                  '/feature_request_details/' +
+                  feature.id
+              )
+            "
+          >
+            Details
+          </button>
           <button class="btn" @click="() => deleteFeature(feature.id)">
             Delete
           </button>
@@ -46,28 +53,22 @@
 
 <script>
 import axios from "axios";
-import EditFeature from "./EditFeature.vue";
 export default {
-  name: "FeatureLists",
-  components: {
-    EditFeature,
-  },
+  name: "FeatureRequestLists",
   data() {
     return {
       showEditModal: false,
+      showAddModal: false,
       error: "",
+      featuresRequest: [],
       feature: {},
-      copyMessage: "click to copy the text",
     };
-  },
-  props: {
-    featureList: Array,
   },
   methods: {
     getFeatureToEdit(id) {
       this.showEditModal = true;
-      let formData = new FormData();
-      formData.append("action", "wpsfb_get_single_feature");
+      const formData = new FormData();
+      formData.append("action", "");
       formData.append("id", id);
       axios
         .post(ajax_url.ajaxurl, formData)
@@ -103,14 +104,27 @@ export default {
         })
         .catch((err) => this.$alert("Something error happened"));
     },
-    copyShortcode(index) {
-      const copy = this.$refs.copycode[index].value;
-      navigator.clipboard.writeText(copy);
-      this.copyMessage = "text copied!";
+    getFeatureRequestById() {
+      const id = this.$route.params.id;
+      const formData = new FormData();
+      formData.append("action", "wpsfb_get_features_request_list");
+      formData.append("id", id);
+      axios
+        .post(ajax_url.ajaxurl, formData)
+        .then((res) => {
+          this.featuresRequest = res.data.data;
+          this.featuresRequest.tags = this.featuresRequest.tags
+            ? this.featuresRequest.tags.split(",")
+            : [];
+        })
+        .catch((err) => {
+          this.error = "Error retriving data";
+          console.log(err);
+        });
     },
-    moveMove() {
-      this.copyMessage = "click to copy the text";
-    },
+  },
+  created() {
+    this.getFeatureRequestById();
   },
 };
 </script>
@@ -139,7 +153,8 @@ export default {
 }
 
 #feature-table tr:hover {
-  background-color: #ddd;
+  cursor: pointer;
+  background-color: #ccc;
 }
 
 .tooltip {

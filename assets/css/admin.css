@@ -11,7 +11,8 @@
   transition: 0.3s all;
 }
 .btn:hover {
-  background-color: #1f66a3;
+  background-color: #114777;
+  cursor: pointer;
 }
 .input-group {
   margin-bottom: 20px;
@@ -29,7 +30,37 @@
 }
 
 
-form[data-v-38f88f8c] {
+form[data-v-35ccfb62] {
+  width: 60%;
+  background-color: #eee;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  padding: 20px;
+  margin: 50px auto;
+}
+form[data-v-35ccfb62]:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+.btn-group[data-v-35ccfb62] {
+  margin-top: 16px;
+}
+.tag[data-v-35ccfb62] {
+  background-color: #aaa;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px 10px;
+  margin-right: 8px;
+}
+.tag[data-v-35ccfb62]:hover {
+  background-color: #999;
+  cursor: pointer;
+}
+.show-error[data-v-35ccfb62] {
+  color: red;
+}
+
+
+form[data-v-1efb7cf9] {
   width: 50%;
   background-color: #eee;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
@@ -37,59 +68,60 @@ form[data-v-38f88f8c] {
   padding: 20px;
   margin: 50px auto;
 }
-form[data-v-38f88f8c]:hover {
+form[data-v-1efb7cf9]:hover {
   box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
-.btn-group[data-v-38f88f8c] {
+.btn-group[data-v-1efb7cf9] {
   margin-top: 16px;
 }
-.tag[data-v-38f88f8c] {
+.tag[data-v-1efb7cf9] {
   background-color: #aaa;
   color: #fff;
   padding: 6px 10px;
   border-radius: 6px 10px;
   margin-right: 8px;
 }
-.tag[data-v-38f88f8c]:hover {
+.tag[data-v-1efb7cf9]:hover {
   background-color: #999;
   cursor: pointer;
 }
 
 
-#feature-table[data-v-25e3acef] {
+#feature-table[data-v-0a1dc636] {
   width: 90%;
   margin: 20px auto 0;
   border-collapse: collapse;
 }
-#feature-table th[data-v-25e3acef] {
+#feature-table th[data-v-0a1dc636] {
   padding: 10px 0;
   background-color: darkgray;
 }
-#feature-table td[data-v-25e3acef],
-#customers th[data-v-25e3acef] {
+#feature-table td[data-v-0a1dc636],
+#customers th[data-v-0a1dc636] {
   border: 1px solid #ddd;
   padding: 8px;
   vertical-align: middle;
 }
-#feature-table tr[data-v-25e3acef]:nth-child(even) {
+#feature-table tr[data-v-0a1dc636]:nth-child(even) {
   background-color: #ddd;
 }
-#feature-table tr[data-v-25e3acef]:hover {
-  background-color: #ddd;
+#feature-table tr[data-v-0a1dc636]:hover {
+  cursor: default;
+  background-color: #ccc;
 }
-.tooltip[data-v-25e3acef] {
+.tooltip[data-v-0a1dc636] {
   position: relative;
   display: inline-block;
   width: 100%;
 }
-.tooltip input[data-v-25e3acef] {
+.tooltip input[data-v-0a1dc636] {
   width: 100%;
   padding: 6px;
   text-align: center;
   border: 1px solid #222;
   border-radius: 4px;
 }
-.tooltip .tooltip-text[data-v-25e3acef] {
+.tooltip .tooltip-text[data-v-0a1dc636] {
   visibility: hidden;
   width: 150px;
   background-color: black;
@@ -103,7 +135,7 @@ form[data-v-38f88f8c]:hover {
   left: 50%;
   margin-left: -60px;
 }
-.tooltip .tooltip-text[data-v-25e3acef]::after {
+.tooltip .tooltip-text[data-v-0a1dc636]::after {
   content: "";
   position: absolute;
   top: 100%;
@@ -113,40 +145,76 @@ form[data-v-38f88f8c]:hover {
   border-style: solid;
   border-color: black transparent transparent transparent;
 }
-.tooltip:hover .tooltip-text[data-v-25e3acef] {
+.tooltip:hover .tooltip-text[data-v-0a1dc636] {
   visibility: visible;
 }
-.tooltip input[data-v-25e3acef]:hover {
+.tooltip input[data-v-0a1dc636]:hover {
   cursor: pointer;
 }
 
 
-form[data-v-372fc8c5] {
-  width: 60%;
-  background-color: #eee;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-  transition: 0.3s;
-  padding: 20px;
-  margin: 50px auto;
+#feature-table[data-v-148ca665] {
+  width: 90%;
+  margin: 20px auto 0;
+  border-collapse: collapse;
 }
-form[data-v-372fc8c5]:hover {
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+#feature-table th[data-v-148ca665] {
+  padding: 10px 0;
+  background-color: darkgray;
 }
-.btn-group[data-v-372fc8c5] {
-  margin-top: 16px;
+#feature-table td[data-v-148ca665],
+#customers th[data-v-148ca665] {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: middle;
 }
-.tag[data-v-372fc8c5] {
-  background-color: #aaa;
+#feature-table tr[data-v-148ca665]:nth-child(even) {
+  background-color: #ddd;
+}
+#feature-table tr[data-v-148ca665]:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+.tooltip[data-v-148ca665] {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.tooltip input[data-v-148ca665] {
+  width: 100%;
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #222;
+  border-radius: 4px;
+}
+.tooltip .tooltip-text[data-v-148ca665] {
+  visibility: hidden;
+  width: 150px;
+  background-color: black;
   color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px 10px;
-  margin-right: 8px;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 115%;
+  left: 50%;
+  margin-left: -60px;
 }
-.tag[data-v-372fc8c5]:hover {
-  background-color: #999;
+.tooltip .tooltip-text[data-v-148ca665]::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+.tooltip:hover .tooltip-text[data-v-148ca665] {
+  visibility: visible;
+}
+.tooltip input[data-v-148ca665]:hover {
   cursor: pointer;
-}
-.show-error[data-v-372fc8c5] {
-  color: red;
 }
 
