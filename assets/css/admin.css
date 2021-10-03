@@ -218,3 +218,43 @@ form[data-v-1efb7cf9]:hover {
   cursor: pointer;
 }
 
+
+.feature-request-wrapper[data-v-3a796edc] {
+  display: flex;
+  justify-content: space-between;
+  width: 95%;
+  box-shadow: 5px 5px 10px #aaa;
+  padding: 20px;
+  margin: auto;
+}
+.feature-request-wrapper .status[data-v-3a796edc] {
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  background-color: blueviolet;
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+}
+.feature-request-comment-wrapper[data-v-3a796edc] {
+  width: 95%;
+  box-shadow: 5px 5px 10px #aaa;
+  padding: 20px;
+  margin: 30px auto;
+}
+.feature-request-comment-wrapper .comment[data-v-3a796edc] {
+  box-shadow: 5px 5px 10px #aaa;
+  padding: 10px;
+  margin: 20px auto;
+}
+.feature-request-comment-wrapper .comment p[data-v-3a796edc] {
+  font-weight: 600;
+  margin: 5px 0;
+}
+.feature-request-comment-wrapper .comment .comment-user[data-v-3a796edc] {
+  color: #999;
+}
+form textarea[data-v-3a796edc] {
+  width: 100%;
+}
+

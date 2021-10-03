@@ -24,13 +24,7 @@
         <td>
           <button
             class="btn"
-            @click="
-              $router.push(
-                +feature.feature_board_id +
-                  '/feature_request_details/' +
-                  feature.id
-              )
-            "
+            @click="$router.push('/feature_request_details/' + feature.id)"
           >
             Details
           </button>
@@ -77,6 +71,9 @@ export default {
           this.feature.tags = this.feature.tags
             ? this.feature.tags.split(",")
             : [];
+          this.feature.comments = this.feature.comments
+            ? this.feature.comments.split(",")
+            : [];
         })
         .catch((err) => {
           this.error = "Error retriving data";
@@ -104,7 +101,7 @@ export default {
         })
         .catch((err) => this.$alert("Something error happened"));
     },
-    getFeatureRequestById() {
+    getFeatureRequest() {
       const id = this.$route.params.id;
       const formData = new FormData();
       formData.append("action", "wpsfb_get_features_request_list");
@@ -124,7 +121,7 @@ export default {
     },
   },
   created() {
-    this.getFeatureRequestById();
+    this.getFeatureRequest();
   },
 };
 </script>

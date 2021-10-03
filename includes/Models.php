@@ -23,9 +23,9 @@ class Models
     add_action('wp_ajax_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
     add_action('wp_ajax_wpsfb_create_tags_by_feature', [$this, 'wpsfb_create_tags_by_feature']);
     //comments
-    add_action('wp_ajax_wpsfb_get_feature_comments', [$this, 'wpsfb_get_feature_comments']);
+    add_action('wp_ajax_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
     add_action('wp_ajax_wpsfb_insert_feature_comment', [$this, 'wpsfb_insert_feature_comment']);
-    add_action('wp_ajax_wpsfb_get_feature_votes_count', [$this, 'wpsfb_get_feature_votes_count']);
+    add_action('wp_ajax_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
     // add_action('rest_api_init', function () {
     //   register_rest_route('markers/v1', '/feature/', array(
     //     'methods' => 'GET',
@@ -235,12 +235,10 @@ class Models
   {
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_request';
-    $fr_id = $_POST['fr_id'];
     $id = $_POST['id'];
     $selected = $wpdb->get_row(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(tg.tagname SEPARATOR ',') AS tags FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.id = %d GROUP BY fr.id",
-        $fr_id,
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.id = %d",
         $id
       )
     );
@@ -322,14 +320,14 @@ class Models
     return wp_send_json_success("Successfully updated data", 200);
   }
 
-  public function wpsfb_get_feature_comments()
+  public function wpsfb_get_feature_request_comments()
   {
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_comments';
     $id = $_POST['id'];
     $selected = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT c.id, c.comment, u.user_login FROM {$table_name} AS c LEFT JOIN wp_users AS u ON u.ID = c.user_id WHERE feature_board_id = %d",
+        "SELECT c.id, c.comment, u.user_login FROM $table_name as c JOIN wp_users AS u ON u.ID = c.user_id WHERE c.feature_request_id = %d;",
         $id
       )
     );
@@ -362,28 +360,28 @@ class Models
     return wp_send_json_success("Successfully posted data", 200);
   }
 
-  public function wpsfb_get_feature_votes_count()
+  public function wpsfb_get_feature_requests_votes_count()
   {
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_votes';
-    $id = $_POST['feature_id'];
+    $id = $_POST['id'];
     $selected = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT * FROM $table_name WHERE feature_board_id = %d",
+        "SELECT COUNT(v.feature_request_id) as vote_count FROM $table_name as v WHERE feature_request_id = %d",
         $id
       )
     );
 
-    $current_user_id = get_current_user_id();
-    foreach ($selected as $key => $item) {
-      foreach ($item as $v_key => $v_item) {
-        if ($v_key === 'user_id') {
-          $is_user_voted = $v_item == $current_user_id;
-        }
-      }
-    }
+    // $current_user_id = get_current_user_id();
+    // foreach ($selected as $key => $item) {
+    //   foreach ($item as $v_key => $v_item) {
+    //     if ($v_key === 'user_id') {
+    //       $is_user_voted = $v_item == $current_user_id;
+    //     }
+    //   }
+    // }
 
-    array_unshift($selected, ['count' => count($selected), 'isUserVoted' => $is_user_voted]);
+    // array_unshift($selected, ['count' => count($selected), 'isUserVoted' => $is_user_voted]);
     if (!$selected) {
       return wp_send_json_error("Error while deleting data", 500);
     }

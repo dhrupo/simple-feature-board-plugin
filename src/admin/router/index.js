@@ -31,7 +31,7 @@ export default new Router({
       component: FeatureRequestLists
     },
     {
-      path: '/:fr_id/feature_request_details/:id',
+      path: '/feature_request_details/:id',
       name: 'FeatureRequestDetails',
       component: FeatureRequestDetails
     },
