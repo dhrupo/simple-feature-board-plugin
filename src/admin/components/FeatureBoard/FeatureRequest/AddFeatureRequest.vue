@@ -2,45 +2,54 @@
   <form v-on:submit.prevent="addFeature">
     <h2 class="show-error">{{ this.error }}</h2>
     <div class="input-group">
-      <label for="feature-title">Feature Title</label>
+      <label for="feature-request-title">Feature Request Title</label>
       <input
         required
-        id="feature-title"
+        id="feature-request-title"
         type="text"
-        placeholder="Feature Title"
-        v-model.trim.lazy="featureTitle"
+        placeholder="Feature Request Title"
+        v-model.trim.lazy="featureRequestTitle"
       />
     </div>
     <div class="input-group">
-      <label for="feature-details">Feature Details</label>
+      <label for="feature-request-details">Feature Request Details</label>
       <textarea
         required
-        id="feature-details"
+        id="feature-request-details"
         type="text"
-        placeholder="Feature Details"
+        placeholder="Feature Request Details"
         cols="50"
         rows="5"
-        v-model.trim.lazy="featureDetails"
+        v-model.trim.lazy="featureRequestDetails"
       ></textarea>
     </div>
     <div class="input-group">
-      <label for="feature-tags">Feature Tags</label>
+      <label for="status">Status</label>
+      <select v-model="status" id="status">
+        <option disabled value="">Please select one</option>
+        <option value="published">Published</option>
+        <option value="unpublished">Unpublished</option>
+        <option value="pending">Pending</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label for="feature-request-tags">Feature Request Tags</label>
       <input
-        id="feature-tags"
+        id="feature-request-tags"
         @keyup.space="addTags"
         type="text"
         placeholder="Add tags by space"
-        v-model.trim="featureTag"
+        v-model.trim="featureRequestTag"
       />
     </div>
     <div>
-      <span v-for="(tag, index) in featureTags" :key="index + 1">
+      <span v-for="(tag, index) in featureRequestTags" :key="index + 1">
         <span class="tag" @click="() => removeTag(index)">{{ tag }}</span>
       </span>
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn">Add Feature</button>
-      <button @click="$router.push('/')" class="btn">Back To List</button>
+      <button type="submit" class="btn">Add Feature Request</button>
+      <button @click="$emit('closeAdd')" class="btn">Back To List</button>
     </div>
   </form>
 </template>
@@ -51,25 +60,30 @@ export default {
   name: "AddFeature",
   data() {
     return {
-      featureTitle: "",
-      featureDetails: "",
-      featureTag: "",
-      featureTags: [],
+      featureRequestTitle: "",
+      featureRequestDetails: "",
+      featureRequestTag: "",
+      featureRequestTags: [],
       message: "",
       error: "",
+      status: "",
     };
   },
   methods: {
     addFeature() {
-      if (this.featureTags.length < 0) {
-        this.error = "Must have add feature tags to create a new feature";
+      if (this.featureRequestTags.length < 0) {
+        this.error =
+          "Must have add feature tags to create a new feature Request";
         return;
       }
+      const id = this.$route.params.id;
       const formData = new FormData();
-      formData.append("action", "wpsfb_insert_feature");
-      formData.append("title", this.featureTitle);
-      formData.append("details", this.featureDetails);
-      formData.append("tags", this.featureTags);
+      formData.append("action", "wpsfb_insert_feature_request");
+      formData.append("title", this.featureRequestTitle);
+      formData.append("details", this.featureRequestDetails);
+      formData.append("id", id);
+      formData.append("tags", this.featureRequestTags);
+      formData.append("status", this.status);
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
@@ -80,7 +94,7 @@ export default {
             type: "success",
           }).then((okay) => {
             if (okay) {
-              this.$router.push("/");
+              this.$router.go(0);
             }
           });
         })
@@ -89,12 +103,11 @@ export default {
         );
     },
     addTags() {
-      !this.featureTags.includes(this.featureTag) &&
-        this.featureTags.push(this.featureTag);
-      this.featureTag = "";
+      !this.featureRequestTags.includes(this.featureRequestTag) &&
+        this.featureRequestTags.push(this.featureRequestTag.toUpperCase());
+      this.featureRequestTag = "";
     },
     removeTag(index) {
-      // const selected = event.target.innerHTML;
       this.featureTags.splice(index, 1);
     },
   },

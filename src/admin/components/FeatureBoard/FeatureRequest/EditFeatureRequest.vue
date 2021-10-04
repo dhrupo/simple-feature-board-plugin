@@ -1,17 +1,17 @@
 <template>
-  <form v-on:submit.prevent="() => editFeature(feature.id)">
+  <form v-on:submit.prevent="() => editFeatureRequest(feature.id)">
     <div class="input-group">
-      <label for="feature-title">Feature Title</label>
+      <label for="feature-title">Feature Request Title</label>
       <input
         required
         id="feature-title"
         type="text"
-        placeholder="Feature Title"
+        placeholder="Feature Request Title"
         v-model.trim.lazy="feature.title"
       />
     </div>
     <div class="input-group">
-      <label for="feature-details">Feature Details</label>
+      <label for="feature-details">Feature Request Details</label>
       <textarea
         required
         id="feature-details"
@@ -23,7 +23,7 @@
       ></textarea>
     </div>
     <div class="input-group">
-      <label for="feature-tags">Feature Tags</label>
+      <label for="feature-tags">Feature Request Tags</label>
       <input
         id="feature-tags"
         @keyup.space="addTags"
@@ -38,8 +38,8 @@
       </span>
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn">Edit Feature</button>
-      <button class="btn" @click="$emit('close')">Close</button>
+      <button type="submit" class="btn">Edit Feature Request</button>
+      <button class="btn" @click="$emit('closeEdit')">Close</button>
     </div>
   </form>
 </template>
@@ -47,7 +47,7 @@
 <script>
 import axios from "axios";
 export default {
-  name: "EditFeature",
+  name: "EditFeatureRequest",
   data() {
     return {
       featureTag: "",
@@ -62,13 +62,16 @@ export default {
   // }
   // },
   methods: {
-    editFeature(id) {
+    editFeatureRequest(id) {
       let formData = new FormData();
-      formData.append("action", "wpsfb_edit_feature");
+      formData.append("action", "wpsfb_edit_feature_request");
       formData.append("id", id);
       formData.append("title", this.feature.title);
       formData.append("details", this.feature.details);
       formData.append("tags", this.feature.tags);
+      formData.append("feature_board_id", this.feature.feature_board_id);
+      formData.append("user_id", this.feature.user_id);
+
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
@@ -79,7 +82,7 @@ export default {
             type: "success",
           }).then((okay) => {
             if (okay) {
-              this.$router.go("/");
+              this.$router.go(0);
             }
           });
         })
@@ -89,12 +92,11 @@ export default {
     },
     addTags() {
       !this.feature.tags.includes(this.featureTag) &&
-        this.feature.tags.push(this.featureTag);
+        this.feature.tags.push(this.featureTag.toUpperCase());
       this.featureTag = "";
     },
     removeTag(index) {
       this.feature.tags.splice(index, 1);
-      console.log(this.feature.tags);
     },
   },
 };

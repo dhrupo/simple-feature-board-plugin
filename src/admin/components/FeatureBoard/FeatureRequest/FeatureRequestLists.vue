@@ -1,25 +1,40 @@
 <template>
   <div>
     <div>
-      <button class="btn" @click="$router.go(-1)">Back</button>
+      <button
+        v-if="!showAddModal && !showEditModal"
+        class="btn"
+        @click="$router.go(-1)"
+      >
+        Back
+      </button>
+      <button
+        v-if="!showAddModal && !showEditModal"
+        class="btn"
+        @click="showAddModal = true"
+      >
+        Add feature Request
+      </button>
     </div>
-    <AddFeatureBoard
+    <AddFeatureRequest
       v-if="showAddModal"
       @closeAdd="showAddModal = false"
-    ></AddFeatureBoard>
+    ></AddFeatureRequest>
     <div v-if="error">{{ error }}</div>
     <table v-if="!showAddModal && !showEditModal" id="feature-table">
       <tr>
-        <th>Feature Title</th>
-        <th>Feature Details</th>
-        <th>Feature Tags</th>
+        <th>Feature Request Title</th>
+        <th>Feature Request Details</th>
+        <th>Feature Request Tags</th>
+        <th>Status</th>
         <th>Username</th>
         <th>Actions</th>
       </tr>
-      <tr v-for="feature in featuresRequest" :key="feature.id">
+      <tr v-for="feature in featureRequest" :key="feature.id">
         <td>{{ feature.title }}</td>
         <td>{{ feature.details }}</td>
         <td>{{ feature.tags }}</td>
+        <td>{{ feature.status }}</td>
         <td>{{ feature.username }}</td>
         <td>
           <button
@@ -37,16 +52,18 @@
         </td>
       </tr>
     </table>
-    <EditFeature
+    <EditFeatureRequest
       :feature="feature"
       v-if="showEditModal"
-      @close="showEditModal = false"
-    ></EditFeature>
+      @closeEdit="showEditModal = false"
+    ></EditFeatureRequest>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import AddFeatureRequest from "./AddFeatureRequest.vue";
+import EditFeatureRequest from "./EditFeatureRequest.vue";
 export default {
   name: "FeatureRequestLists",
   data() {
@@ -54,15 +71,19 @@ export default {
       showEditModal: false,
       showAddModal: false,
       error: "",
-      featuresRequest: [],
+      featureRequest: [],
       feature: {},
     };
+  },
+  components: {
+    AddFeatureRequest,
+    EditFeatureRequest,
   },
   methods: {
     getFeatureToEdit(id) {
       this.showEditModal = true;
       const formData = new FormData();
-      formData.append("action", "");
+      formData.append("action", "wpsfb_get_single_feature_to_edit");
       formData.append("id", id);
       axios
         .post(ajax_url.ajaxurl, formData)
@@ -70,9 +91,6 @@ export default {
           this.feature = res.data.data;
           this.feature.tags = this.feature.tags
             ? this.feature.tags.split(",")
-            : [];
-          this.feature.comments = this.feature.comments
-            ? this.feature.comments.split(",")
             : [];
         })
         .catch((err) => {
@@ -85,19 +103,18 @@ export default {
         .then((okay) => {
           if (okay) {
             const formData = new FormData();
-            formData.append("action", "wpsfb_delete_feature");
+            formData.append("action", "wpsfb_delete_feature_request");
             formData.append("id", id);
             axios
               .post(ajax_url.ajaxurl, formData)
               .then((res) => {
                 this.$alert("Successfully Deleted the data");
-                console.log(res);
               })
               .catch((err) =>
                 this.$alert("Error occured while deleting data", "", "error")
               );
           }
-          this.$router.go("/");
+          this.$router.go(0);
         })
         .catch((err) => this.$alert("Something error happened"));
     },
@@ -109,9 +126,9 @@ export default {
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
-          this.featuresRequest = res.data.data;
-          this.featuresRequest.tags = this.featuresRequest.tags
-            ? this.featuresRequest.tags.split(",")
+          this.featureRequest = res.data.data;
+          this.featureRequest.tags = this.featureRequest.tags
+            ? this.featureRequest.tags.split(",")
             : [];
         })
         .catch((err) => {
