@@ -1,0 +1,123 @@
+
+form[data-v-a3d1aace] {
+  width: 60%;
+  background-color: #eee;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  padding: 20px;
+  margin: 50px auto;
+}
+form[data-v-a3d1aace]:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+.btn-group[data-v-a3d1aace] {
+  margin-top: 16px;
+}
+.tag[data-v-a3d1aace] {
+  background-color: #aaa;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px 10px;
+  margin-right: 8px;
+}
+.tag[data-v-a3d1aace]:hover {
+  background-color: #999;
+  cursor: pointer;
+}
+.show-error[data-v-a3d1aace] {
+  color: red;
+}
+
+
+form[data-v-256e2214] {
+  width: 50%;
+  background-color: #eee;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+  padding: 20px;
+  margin: 50px auto;
+}
+form[data-v-256e2214]:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+.btn-group[data-v-256e2214] {
+  margin-top: 16px;
+}
+.tag[data-v-256e2214] {
+  background-color: #aaa;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px 10px;
+  margin-right: 8px;
+}
+.tag[data-v-256e2214]:hover {
+  background-color: #999;
+  cursor: pointer;
+}
+
+
+#feature-table[data-v-40bbc30a] {
+  width: 90%;
+  margin: 20px auto 0;
+  border-collapse: collapse;
+}
+#feature-table th[data-v-40bbc30a] {
+  padding: 10px 0;
+  background-color: darkgray;
+}
+#feature-table td[data-v-40bbc30a],
+#customers th[data-v-40bbc30a] {
+  border: 1px solid #ddd;
+  padding: 8px;
+  vertical-align: middle;
+}
+#feature-table tr[data-v-40bbc30a]:nth-child(even) {
+  background-color: #ddd;
+}
+#feature-table tr[data-v-40bbc30a]:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+.tooltip[data-v-40bbc30a] {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.tooltip input[data-v-40bbc30a] {
+  width: 100%;
+  padding: 6px;
+  text-align: center;
+  border: 1px solid #222;
+  border-radius: 4px;
+}
+.tooltip .tooltip-text[data-v-40bbc30a] {
+  visibility: hidden;
+  width: 150px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 115%;
+  left: 50%;
+  margin-left: -60px;
+}
+.tooltip .tooltip-text[data-v-40bbc30a]::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+}
+.tooltip:hover .tooltip-text[data-v-40bbc30a] {
+  visibility: visible;
+}
+.tooltip input[data-v-40bbc30a]:hover {
+  cursor: pointer;
+}
+

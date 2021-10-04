@@ -6,7 +6,7 @@ Vue.config.productionTip = false
 
 /* eslint-disable no-new */
 new Vue({
-  el: '#vue-frontend-app',
+  el: '#wpsfb-frontend-app',
   router,
   render: h => h(App)
 })

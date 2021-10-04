@@ -1,25 +1,26 @@
 <template>
-  <form v-on:submit.prevent="() => editFeatureRequest(feature.id)">
+  <form v-on:submit.prevent="addFeature">
+    <h2 class="show-error">{{ this.error }}</h2>
     <div class="input-group">
-      <label for="feature-title">Feature Request Title</label>
+      <label for="feature-request-title">Feature Request Title</label>
       <input
         required
-        id="feature-title"
+        id="feature-request-title"
         type="text"
         placeholder="Feature Request Title"
-        v-model.trim.lazy="feature.title"
+        v-model.trim.lazy="featureRequestTitle"
       />
     </div>
     <div class="input-group">
-      <label for="feature-details">Feature Request Details</label>
+      <label for="feature-request-details">Feature Request Details</label>
       <textarea
         required
-        id="feature-details"
+        id="feature-request-details"
         type="text"
-        placeholder="Feature Details"
+        placeholder="Feature Request Details"
         cols="50"
         rows="5"
-        v-model.trim.lazy="feature.details"
+        v-model.trim.lazy="featureRequestDetails"
       ></textarea>
     </div>
     <div class="input-group">
@@ -32,23 +33,23 @@
       </select>
     </div>
     <div class="input-group">
-      <label for="feature-tags">Feature Request Tags</label>
+      <label for="feature-request-tags">Feature Request Tags</label>
       <input
-        id="feature-tags"
+        id="feature-request-tags"
         @keyup.space="addTags"
         type="text"
         placeholder="Add tags by space"
-        v-model.trim="featureTag"
+        v-model.trim="featureRequestTag"
       />
     </div>
     <div>
-      <span v-for="(tag, index) in feature.tags" :key="index + 1">
+      <span v-for="(tag, index) in featureRequestTags" :key="index + 1">
         <span class="tag" @click="() => removeTag(index)">{{ tag }}</span>
       </span>
     </div>
     <div class="btn-group">
-      <button type="submit" class="btn">Edit Feature Request</button>
-      <button class="btn" @click="$emit('closeEdit')">Close</button>
+      <button type="submit" class="btn">Add Feature Request</button>
+      <button @click="$emit('closeAdd')" class="btn">Back To List</button>
     </div>
   </form>
 </template>
@@ -56,31 +57,33 @@
 <script>
 import axios from "axios";
 export default {
-  name: "EditFeatureRequest",
+  name: "AddFeature",
   data() {
     return {
-      featureTag: "",
+      featureRequestTitle: "",
+      featureRequestDetails: "",
+      featureRequestTag: "",
+      featureRequestTags: [],
+      message: "",
+      error: "",
+      status: "",
     };
   },
-  props: {
-    feature: Object,
-  },
-  // computed: {
-  // featureTags: function() {
-  //   return this.feature.tags ? this.feature.tags.split(',') : [];
-  // }
-  // },
   methods: {
-    editFeatureRequest(id) {
-      let formData = new FormData();
-      formData.append("action", "wpsfb_edit_feature_request");
+    addFeature() {
+      if (this.featureRequestTags.length < 0) {
+        this.error =
+          "Must have add feature tags to create a new feature Request";
+        return;
+      }
+      const id = this.$route.params.id;
+      const formData = new FormData();
+      formData.append("action", "wpsfb_insert_feature_request");
+      formData.append("title", this.featureRequestTitle);
+      formData.append("details", this.featureRequestDetails);
       formData.append("id", id);
-      formData.append("title", this.feature.title);
-      formData.append("details", this.feature.details);
-      formData.append("tags", this.feature.tags);
-      formData.append("feature_board_id", this.feature.feature_board_id);
-      formData.append("user_id", this.feature.user_id);
-
+      formData.append("tags", this.featureRequestTags);
+      formData.append("status", this.status);
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
@@ -100,12 +103,12 @@ export default {
         );
     },
     addTags() {
-      !this.feature.tags.includes(this.featureTag) &&
-        this.feature.tags.push(this.featureTag.toUpperCase());
-      this.featureTag = "";
+      !this.featureRequestTags.includes(this.featureRequestTag) &&
+        this.featureRequestTags.push(this.featureRequestTag.toUpperCase());
+      this.featureRequestTag = "";
     },
     removeTag(index) {
-      this.feature.tags.splice(index, 1);
+      this.featureTags.splice(index, 1);
     },
   },
 };
@@ -113,7 +116,7 @@ export default {
 
 <style scoped>
 form {
-  width: 50%;
+  width: 60%;
   background-color: #eee;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
   transition: 0.3s;
@@ -136,5 +139,8 @@ form:hover {
 .tag:hover {
   background-color: #999;
   cursor: pointer;
+}
+.show-error {
+  color: red;
 }
 </style>
