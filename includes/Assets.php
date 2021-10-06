@@ -54,7 +54,7 @@ class Assets
       ],
       'wpsfb-script' => [
         'src' => WPSFB_ASSETS . '/js/frontend.js',
-        'deps'      => ['jquery', 'wpsfb-vendor', 'wpsfb-runtime'],
+        'deps'      => ['JQuery'],
         'version' => filemtime(WPSFB_PLUGIN_PATH . '/assets/js/frontend.js'),
         'in_footer' => true
       ],
@@ -70,10 +70,10 @@ class Assets
   public function get_styles()
   {
     return [
-      'wpsfb-style' => [
-        'src' => WPSFB_ASSETS . '/frontend/css/frontend.css',
-        'version' => filemtime(WPSFB_PLUGIN_PATH . '/assets/frontend/css/frontend.css')
-      ],
+      // 'wpsfb-style' => [
+      //   'src' => WPSFB_ASSETS . '/css/frontend.css',
+      //   'version' => filemtime(WPSFB_PLUGIN_PATH . 'assets/css/frontend.css')
+      // ],
       'wpsfb-admin-style' => [
         'src' => WPSFB_ASSETS . '/css/admin.css',
         'version' => filemtime(WPSFB_PLUGIN_PATH . '/assets/css/admin.css')

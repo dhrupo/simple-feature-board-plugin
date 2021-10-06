@@ -110,9 +110,10 @@ final class WP_Feature_Board
   public function init_plugin()
   {
     new \WPSFB\Includes\Assets();
-    new \WPSFB\Includes\Models();
+    new \WPSFB\Includes\FrontendModels();
     if (is_admin()) {
       new \WPSFB\Includes\Admin();
+      new \WPSFB\Includes\Models();
     } else {
       new \WPSFB\Includes\Frontend();
     }

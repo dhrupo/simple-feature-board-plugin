@@ -2,23 +2,16 @@
 
 namespace WPSFB\Includes;
 
-class Models
+class FrontendModels
 {
   function __construct()
   {
-    // add_action('plugins_loaded', [$this, 'wpsfb_insert_feature_table']);
-    add_action('admin_enqueue_scripts', [$this, 'wpsfb_admin_scripts']);
-
     //feature board tags
-    add_action('wp_ajax_wpsfb_get_features_board_list', [$this, 'wpsfb_get_features_board_list']);
-    add_action('wp_ajax_wpsfb_insert_feature_board', [$this, 'wpsfb_insert_feature_board']);
     add_action('wp_ajax_wpsfb_get_single_feature_board', [$this, 'wpsfb_get_single_feature_board']);
-    add_action('wp_ajax_wpsfb_edit_feature_board', [$this, 'wpsfb_edit_feature_board']);
-    add_action('wp_ajax_wpsfb_delete_feature_board', [$this, 'wpsfb_delete_feature_board']);
-
-    //feature request
     add_action('wp_ajax_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
     add_action('wp_ajax_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
+
+    //feature request
     add_action('wp_ajax_wpsfb_delete_feature_request', [$this, 'wpsfb_delete_feature_request']);
     add_action('wp_ajax_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
     add_action('wp_ajax_wpsfb_get_single_feature_to_edit', [$this, 'wpsfb_get_single_feature_to_edit']);
@@ -33,13 +26,6 @@ class Models
     add_action('wp_ajax_wpsfb_get_voted_user', [$this, 'wpsfb_get_voted_user']);
     add_action('wp_ajax_wpsfb_add_vote', [$this, 'wpsfb_add_vote']);
     add_action('wp_ajax_wpsfb_remove_vote', [$this, 'wpsfb_remove_vote']);
-
-    // add_action('rest_api_init', function () {
-    //   register_rest_route('markers/v1', '/feature/', array(
-    //     'methods' => 'GET',
-    //     'callback' => [$this, 'wpsfb_get_feature_table_list']
-    //   ));
-    // });
   }
 
   public function wpsfb_admin_scripts()
@@ -48,60 +34,6 @@ class Models
     wp_localize_script('wpsfb', 'ajax_url', array(
       'ajaxurl' => admin_url('admin-ajax.php')
     ));
-  }
-
-  public function wpsfb_get_features_board_list($args = [])
-  {
-    global $wpdb;
-
-    $defaults = [
-      'number' => 10,
-      'offset' => 0,
-      'orderby' => 'id',
-      'order' => 'ASC'
-    ];
-
-    $args = wp_parse_args($args, $defaults);
-
-    $items = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT * FROM {$wpdb->prefix}sfb_features_board
-        ORDER BY %s %s
-        LIMIT %d, %d",
-        $args['orderby'],
-        $args['order'],
-        $args['offset'],
-        $args['number']
-      )
-    );
-
-    if (is_wp_error($items)) {
-      wp_send_json_error('Bad SQL request', 400);
-    }
-
-    wp_send_json_success($items, 200);
-  }
-
-  public function wpsfb_insert_feature_board()
-  {
-    global $wpdb;
-
-    $defaults = [
-      'details' => sanitize_text_field((isset($_POST['details']) ? $_POST['details'] : '')),
-      'title' => sanitize_textarea_field((isset($_POST['title']) ? $_POST['title'] : '')),
-    ];
-
-    $table_name = $wpdb->prefix . 'sfb_features_board';
-    $inserted = $wpdb->insert(
-      $table_name,
-      $defaults
-    );
-
-    if (!$inserted) {
-      return wp_send_json_error("Error while posting data", 500);
-    }
-
-    return wp_send_json_success("Successfully posted data", 200);
   }
 
   public function wpsfb_get_single_feature_board()
@@ -122,53 +54,15 @@ class Models
     return wp_send_json_success($selected, 200);
   }
 
-  public function wpsfb_edit_feature_board()
-  {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'sfb_features_board';
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-    $defaults = [
-      'details' => sanitize_textarea_field(isset($_POST['details']) ? $_POST['details'] : ''),
-      'title' => sanitize_text_field(isset($_POST['title']) ? $_POST['title'] : ''),
-    ];
-    $where = ['id' => $id];
-
-    $updated = $wpdb->update($table_name, $defaults, $where);
-
-    if (!$updated) {
-      return wp_send_json_error("Error while updating feature table data", 500);
-    }
-
-    return wp_send_json_success("Successfully updated data", 200);
-  }
-
-  public function wpsfb_delete_feature_board()
-  {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'sfb_features_board';
-    $defaults = [
-      'id' => $_POST['id']
-    ];
-
-    $deleted = $wpdb->delete($table_name, $defaults);
-
-    if (!$deleted) {
-      return wp_send_json_error("Error while deleting data", 500);
-    }
-
-    return wp_send_json_success("Successfully deleted data", 200);
-  }
-
   public function wpsfb_insert_feature_request()
   {
     global $wpdb;
     $id = $_POST['id'];
     $user_id = get_current_user_id();
-    $status = $_POST['status'];
     $defaults = [
       'title' => sanitize_text_field((isset($_POST['title']) ? $_POST['title'] : '')),
       'details' => sanitize_textarea_field((isset($_POST['details']) ? $_POST['details'] : '')),
-      'status' => $status,
+      'status' => (isset($_POST['status']) ? $_POST['status'] : ''),
       'feature_board_id' => $id,
       'user_id' => $user_id
     ];
@@ -190,7 +84,6 @@ class Models
     ];
 
     $tagArray = explode(',', $tagString['tagname']);
-
     foreach ($tagArray as $tag) {
       $inserted2 = $wpdb->insert(
         $table_name2,
@@ -232,8 +125,6 @@ class Models
         $args['order'],
         $args['offset'],
         $args['number']
-
-        // SELECT fr.id, fr.title, fr.details, fr.status, GROUP_CONCAT(tg.tagname SEPARATOR ',') AS tags, u.user_login as username, vt.id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = 1 GROUP BY fr.id;
       )
     );
 

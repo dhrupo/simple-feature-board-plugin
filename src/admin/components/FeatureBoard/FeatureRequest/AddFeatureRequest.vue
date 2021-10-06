@@ -16,7 +16,6 @@
       <textarea
         required
         id="feature-request-details"
-        type="text"
         placeholder="Feature Request Details"
         cols="50"
         rows="5"
@@ -84,6 +83,7 @@ export default {
       formData.append("id", id);
       formData.append("tags", this.featureRequestTags);
       formData.append("status", this.status);
+      console.log(this.featureRequestTags);
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
@@ -108,7 +108,7 @@ export default {
       this.featureRequestTag = "";
     },
     removeTag(index) {
-      this.featureTags.splice(index, 1);
+      this.featureRequestTags.splice(index, 1);
     },
   },
 };
