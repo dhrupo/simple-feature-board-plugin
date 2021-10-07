@@ -7,22 +7,20 @@ class FrontendModels
   function __construct()
   {
     //feature board tags
-    add_action('wp_ajax_wpsfb_get_single_feature_board', [$this, 'wpsfb_get_single_feature_board']);
-    add_action('wp_ajax_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
+    add_action('wp_ajax_nopriv_wpsfb_get_single_feature_board', [$this, 'wpsfb_get_single_feature_board']);
+    add_action('wp_ajax_nopriv_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
     add_action('wp_ajax_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
+    add_action('wp_ajax_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
+    add_action('wp_ajax_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
+    add_action('wp_ajax_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
 
     //feature request
-    add_action('wp_ajax_wpsfb_delete_feature_request', [$this, 'wpsfb_delete_feature_request']);
-    add_action('wp_ajax_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
     add_action('wp_ajax_wpsfb_get_single_feature_to_edit', [$this, 'wpsfb_get_single_feature_to_edit']);
+    add_action('wp_ajax_wpsfb_delete_feature_request', [$this, 'wpsfb_delete_feature_request']);
     add_action('wp_ajax_wpsfb_edit_feature_request', [$this, 'wpsfb_edit_feature_request']);
 
     //comments
-    add_action('wp_ajax_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
     add_action('wp_ajax_wpsfb_add_feature_request_comment', [$this, 'wpsfb_add_feature_request_comment']);
-
-    //votes
-    add_action('wp_ajax_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
     add_action('wp_ajax_wpsfb_get_voted_user', [$this, 'wpsfb_get_voted_user']);
     add_action('wp_ajax_wpsfb_add_vote', [$this, 'wpsfb_add_vote']);
     add_action('wp_ajax_wpsfb_remove_vote', [$this, 'wpsfb_remove_vote']);

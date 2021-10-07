@@ -28,7 +28,6 @@
         <textarea
           required
           id="comment"
-          type="text"
           placeholder="Add a comment..."
           rows="3"
           v-model.trim.lazy="comment"

@@ -76,3 +76,56 @@
 .show {
   display: none;
 }
+
+.request-details {
+  display: none;
+}
+
+.feature-vote-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+
+.feature-vote-wrapper .single-feature-status {
+  display: inline-block;
+  background-color: #cd2653;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.feature-vote-wrapper .vote {
+  margin-top: 50px;
+}
+
+.tags-wrapper span {
+  background-color: #f13b3b;
+  color: white;
+  padding: 2px 6px;
+  margin-right: 8px;
+  border-radius: 6px;
+  font-size: 20px;
+}
+
+.request-comments-wrapper {
+  margin-top: 0;
+}
+
+.request-comments-wrapper .request-comment {
+  margin: 8px 0;
+  background-color: #fcb9b9;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.request-comments-wrapper .request-comment p {
+  margin-bottom: 5px;
+}
+
+@media (min-width: 700px) {
+  div {
+    margin-top: 0;
+  }
+}

@@ -90,10 +90,7 @@ class Shortcode
         $content .= "</div>";
         $content .= "</form>";
         $content .= "</div>";
-
-        $content .= "<div class='test-details'>";
-
-        $content .= "</div>";
+        $content .= "<div class='request-details'></div>";
 
         return $content;
       } else {
