@@ -122,7 +122,6 @@
     var voteCount = 0;
     var isUserVoted = false;
     var comments = [];
-    var singleRequests;
     var id = $(this).attr('data-request-id');
 
     function getVotedUser() {
@@ -134,7 +133,7 @@
           id: id
         },
         success: function (data) {
-          isUserVoted = data.data.length > 0;
+          isUserVoted = data.data && data.data.length > 0;
         }
       });
     }
@@ -149,7 +148,7 @@
           id: id
         },
         success: function (data) {
-          voteCount = data.data[0].vote_count;
+          voteCount = data.data && data.data[0].vote_count;
         }
       });
     }
@@ -164,7 +163,7 @@
           id: id
         },
         success: function (data) {
-          comments = data.data;
+          comments = data.data && data.data;
         }
       });
     }
@@ -174,6 +173,7 @@
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
+        timeout: 30000,
         data: {
           action: 'wpsfb_get_single_feature_request',
           id: id
@@ -183,13 +183,13 @@
           $('.feature-request-content').css('display', 'none');
           $('.request-details').css('display', 'block');
 
-          var id = data.data.id;
-          var title = data.data.title;
-          var details = data.data.details;
-          var status = data.data.status;
-          var user = data.data.username;
-          tagsArray = data.data.tags.split(',');
+          var title = data.data && data.data.title;
+          var details = data.data && data.data.details;
+          var status = data.data && data.data.status;
+          var user = data.data && data.data.username;
+          var tagsArray = data.data && data.data.tags.split(',');
 
+          $(".request-details").html('');
           var html = '';
           html += `<button class='back-to-req'>Back</button>`;
           html += `<div class='feature-vote-wrapper'>`;
@@ -249,7 +249,6 @@
         },
         success: function () {
           $('.input-comment').val('');
-          $(".request-details").html('');
           getComments();
           getRequests();
         }
@@ -267,7 +266,6 @@
         success: function () {
           $(".request-details").html('');
           getVotedUser();
-          getComments();
           getVotesCount();
           getRequests();
         }
