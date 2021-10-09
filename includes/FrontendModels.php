@@ -2,17 +2,33 @@
 
 namespace WPSFB\Includes;
 
+use WP_User;
+
 class FrontendModels
 {
   function __construct()
   {
     //feature board tags
-    add_action('wp_ajax_nopriv_wpsfb_get_single_feature_board', [$this, 'wpsfb_get_single_feature_board']);
+    add_action('wp_ajax_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
     add_action('wp_ajax_nopriv_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
+    add_action('wp_ajax_wpsfb_get_features_request_count', [$this, 'wpsfb_get_features_request_count']);
+    add_action('wp_ajax_nopriv_wpsfb_get_features_request_count', [$this, 'wpsfb_get_features_request_count']);
+    add_action('wp_ajax_wpsfb_get_searched_feature', [$this, 'wpsfb_get_searched_feature']);
+    add_action('wp_ajax_nopriv_wpsfb_get_searched_feature', [$this, 'wpsfb_get_searched_feature']);
     add_action('wp_ajax_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
+    add_action('wp_ajax_nopriv_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
     add_action('wp_ajax_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
+    add_action('wp_ajax_nopriv_wpsfb_get_single_feature_request', [$this, 'wpsfb_get_single_feature_request']);
+    add_action('wp_ajax_nopriv_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
     add_action('wp_ajax_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
     add_action('wp_ajax_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
+    add_action('wp_ajax_nopriv_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
+    add_action('wp_ajax_nopriv_wpsfb_is_logged_in', [$this, 'wpsfb_is_logged_in']);
+    add_action('wp_ajax_wpsfb_is_logged_in', [$this, 'wpsfb_is_logged_in']);
+    add_action('wp_ajax_wpsfb_sign_in', [$this, 'wpsfb_sign_in']);
+    add_action('wp_ajax_nopriv_wpsfb_sign_in', [$this, 'wpsfb_sign_in']);
+    add_action('wp_ajax_wpsfb_sign_out', [$this, 'wpsfb_sign_out']);
+    add_action('wp_ajax_nopriv_wpsfb_sign_out', [$this, 'wpsfb_sign_out']);
 
     //feature request
     add_action('wp_ajax_wpsfb_get_single_feature_to_edit', [$this, 'wpsfb_get_single_feature_to_edit']);
@@ -32,24 +48,6 @@ class FrontendModels
     wp_localize_script('wpsfb', 'ajax_url', array(
       'ajaxurl' => admin_url('admin-ajax.php')
     ));
-  }
-
-  public function wpsfb_get_single_feature_board()
-  {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'sfb_features_board';
-    $id = $_POST['id'];
-    $selected = $wpdb->get_row(
-      $wpdb->prepare(
-        "SELECT * FROM $table_name WHERE id = %d",
-        $id
-      )
-    );
-    if (!$selected) {
-      return wp_send_json_error("Error while deleting data", 500);
-    }
-
-    return wp_send_json_success($selected, 200);
   }
 
   public function wpsfb_insert_feature_request()
@@ -99,14 +97,35 @@ class FrontendModels
     return wp_send_json_success("Successfully posted data", 200);
   }
 
+  public function wpsfb_get_features_request_count()
+  {
+    global $wpdb;
+
+    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $count = $wpdb->get_results(
+      $wpdb->prepare("SELECT COUNT(*) as count FROM wp_sfb_features_request AS fr WHERE fr.feature_board_id = %d", $id)
+    );
+
+    if (is_wp_error($count)) {
+      wp_send_json_error('Bad SQL request', 400);
+    }
+
+    wp_send_json_success($count, 200);
+  }
+
   public function wpsfb_get_features_request_list($args = [])
   {
     global $wpdb;
 
     $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $pageno = isset($_POST['pageno']) ? $_POST['pageno'] : 1;
+    $number = isset($_POST['reqPerPage']) ? isset($_POST['reqPerPage']) : 5;
+    $offset = ($pageno - 1) * $number;
+    // $totalPages = ceil($number / $offset);
+
     $defaults = [
-      'number' => 10,
-      'offset' => 0,
+      'offset' => $offset,
+      'number' => $number,
       'orderby' => 'id',
       'order' => 'ASC'
     ];
@@ -308,20 +327,22 @@ class FrontendModels
 
   public function wpsfb_get_voted_user()
   {
-    global $wpdb;
-    $table_name = $wpdb->prefix . 'sfb_votes';
-    $id = $_POST['id'];
-    $current_user_id = get_current_user_id();
-    // $current_user_id = 5;
-    $selected = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT * FROM $table_name as v WHERE v.feature_request_id = %d AND v.user_id = %d",
-        $id,
-        $current_user_id
-      )
-    );
-
-    return wp_send_json_success($selected, 200);
+    if (is_user_logged_in()) {
+      global $wpdb;
+      $table_name = $wpdb->prefix . 'sfb_votes';
+      $id = $_POST['id'];
+      $current_user_id = get_current_user_id();
+      $selected = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT * FROM $table_name as v WHERE v.feature_request_id = %d AND v.user_id = %d",
+          $id,
+          $current_user_id
+        )
+      );
+      return wp_send_json_success($selected, 200);
+    } else {
+      return wp_send_json_error("user is not logged in", 500);
+    }
   }
 
   public function wpsfb_add_vote()
@@ -362,15 +383,83 @@ class FrontendModels
     ];
 
     // $current_user_id = 5;
-    $inserted = $wpdb->delete(
+    $deleted = $wpdb->delete(
       $table_name,
       $defaults
     );
 
-    if (!$inserted) {
-      wp_send_json_error("Unsuccessful attempt to vote", 500);
+    if (!$deleted) {
+      wp_send_json_error("Unsuccessful attempt to unvote", 500);
     }
 
     return wp_send_json_success("Successfully unvoted", 200);
+  }
+
+  public function wpsfb_get_searched_feature($args)
+  {
+    global $wpdb;
+
+    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $search = sanitize_text_field(isset($_POST['search']) ? $_POST['search'] : '');
+    $defaults = [
+      'number' => 5,
+      'offset' => 0,
+      'orderby' => 'id',
+      'order' => 'ASC'
+    ];
+
+    $args = wp_parse_args($args, $defaults);
+
+    $items = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.title LIKE '%$search%' OR tg.tagname LIKE '%$search%' GROUP BY fr.id
+        ORDER BY %s %s
+        LIMIT %d, %d",
+        $id,
+        $$args['orderby'],
+        $args['order'],
+        $args['offset'],
+        $args['number']
+      )
+    );
+
+    if (is_wp_error($items)) {
+      wp_send_json_error('Bad SQL request', 400);
+    }
+
+    wp_send_json_success($items, 200);
+  }
+
+  public function wpsfb_is_logged_in()
+  {
+    if (is_user_logged_in()) {
+      wp_send_json(['user' => true]);
+    } else {
+      wp_send_json(['user' => false]);
+    }
+  }
+
+  public function wpsfb_sign_in()
+  {
+    $username = isset($_POST['username']) ? $_POST['username'] : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : '';
+
+    $cred = [
+      'user_login' => $username,
+      'user_password' => $password
+    ];
+
+    $success = wp_signon($cred, false);
+
+    if (is_wp_error($success)) {
+      wp_send_json_error("Unsuccessful attempt to login", 500);
+    }
+
+    return wp_send_json_success("Successfully logged in", 200);
+  }
+
+  public function wpsfb_sign_out()
+  {
+    wp_logout();
   }
 }

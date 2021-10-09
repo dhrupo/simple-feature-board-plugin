@@ -43,22 +43,23 @@ class Shortcode
 
       if ($board) {
         $content .= "<div class='feature-board-content'>";
+        //board
         $content .= "<div class='feature-board-all'>";
         $content .= "<div id='feature-id' data-board-id ='" . $id . "'>";
         $content .= "<h4 class='title'>" . esc_html($board->title) . "</h4>";
         $content .= "<p>" . esc_html($board->details) . "</p>";
         $content .= "</div>";
-        $content .= "<div>";
-        $content .= "<form>";
-        $content .= "<input type='text' id='request-search' placeholder='Search'>";
-        $content .= "</form>";
+        $content .= "<form onsubmit='return false;'><input type='text' id='request-search' placeholder='Search using title or tags'></form>";
         $content .= "</div>";
-        $content .= "</div>";
-        $content .= "<button class='btn add-feature'>Add a feature request</button>";
-        $content .= "</div>";
-
+        //add form button
+        if (is_user_logged_in()) {
+          $content .= "<button class='btn add-feature'>Add a feature request</button>";
+        }
+        //request
         $content .= "<div class='feature-request-content'></div>";
+        $content .= "</div>";
 
+        //request add form
         $content .= "<div class='feature-add-content'>";
         $content .= "<form id='add-feature-request'>";
         $content .= "<div class='input-group'>";
@@ -90,7 +91,24 @@ class Shortcode
         $content .= "</div>";
         $content .= "</form>";
         $content .= "</div>";
+
         $content .= "<div class='request-details'></div>";
+        $content .= "<div>";
+
+        //request login form
+        $content .= "<form id='login-form'>";
+        $content .= "<p class='login-error'></p>";
+        $content .= "<div class='input-group'>";
+        $content .= "<input required id='username' type='text' placeholder='Username'/>";
+        $content .= "</div>";
+        $content .= "<div class='input-group'>";
+        $content .= "<input required id='password' type='password' placeholder='Password'/>";
+        $content .= "</div>";
+        $content .= "<div class='btn-group'>";
+        $content .= "<button type='submit' class='btn loginCheck'>Login</button>";
+        $content .= "<button class='btn cancel'>Close</button>";
+        $content .= "</div>";
+        $content .= "</form>";
 
         return $content;
       } else {

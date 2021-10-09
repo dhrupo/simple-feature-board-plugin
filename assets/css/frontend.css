@@ -1,6 +1,7 @@
 .btn {
   padding: 10px;
   font-weight: 400;
+  margin-right: 5px;
 }
 
 .feature-board-all {
@@ -16,7 +17,7 @@
   margin: 25px 0 10px;
 }
 
-.feature-request-content .feature-request-list {
+.feature-request-list {
   background-color: #fcb9b9;
   margin: 10px 0;
   padding: 10px;
@@ -24,7 +25,7 @@
   transition: 0.3s all;
 }
 
-.feature-request-content .feature-request-list:hover {
+.feature-request-list:hover {
   background-color: #ff8181;
   cursor: pointer;
 }
@@ -100,6 +101,10 @@
   margin-top: 50px;
 }
 
+.tags-error {
+  display: none;
+}
+
 .tags-wrapper span {
   background-color: #f13b3b;
   color: white;
@@ -122,6 +127,51 @@
 
 .request-comments-wrapper .request-comment p {
   margin-bottom: 5px;
+}
+
+#login-form {
+  display: none;
+}
+
+.pagination {
+  display: inline-block;
+}
+
+.pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  border: 1px solid #ddd;
+}
+
+.pagination-active {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #4caf50;
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+}
+
+.pagination a:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.pagination a:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @media (min-width: 700px) {
