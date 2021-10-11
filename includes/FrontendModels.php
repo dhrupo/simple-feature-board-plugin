@@ -13,6 +13,8 @@ class FrontendModels
     add_action('wp_ajax_nopriv_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
     add_action('wp_ajax_wpsfb_get_features_request_count', [$this, 'wpsfb_get_features_request_count']);
     add_action('wp_ajax_nopriv_wpsfb_get_features_request_count', [$this, 'wpsfb_get_features_request_count']);
+    add_action('wp_ajax_wpsfb_get_feature_by_status', [$this, 'wpsfb_get_feature_by_status']);
+    add_action('wp_ajax_nopriv_wpsfb_get_feature_by_status', [$this, 'wpsfb_get_feature_by_status']);
     add_action('wp_ajax_wpsfb_get_searched_feature', [$this, 'wpsfb_get_searched_feature']);
     add_action('wp_ajax_nopriv_wpsfb_get_searched_feature', [$this, 'wpsfb_get_searched_feature']);
     add_action('wp_ajax_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
@@ -272,7 +274,7 @@ class FrontendModels
     $id = $_POST['id'];
     $selected = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT c.id, c.comment, u.user_login FROM $table_name as c JOIN wp_users AS u ON u.ID = c.user_id WHERE c.feature_request_id = %d",
+        "SELECT c.id, c.comment, u.user_login FROM $table_name as c JOIN wp_users AS u ON u.ID = c.user_id WHERE c.feature_request_id = %d ORDER BY c.id DESC",
         $id
       )
     );
@@ -420,6 +422,25 @@ class FrontendModels
         $args['order'],
         $args['offset'],
         $args['number']
+      )
+    );
+
+    if (is_wp_error($items)) {
+      wp_send_json_error('Bad SQL request', 400);
+    }
+
+    wp_send_json_success($items, 200);
+  }
+
+  public function wpsfb_get_feature_by_status()
+  {
+    global $wpdb;
+    $status = isset($_POST['status']) ? $_POST['status'] : '';
+
+    $items = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT * from wp_sfb_features_request as fr where fr.status=%s",
+        $status
       )
     );
 

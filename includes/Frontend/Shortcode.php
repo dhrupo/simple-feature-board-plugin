@@ -49,7 +49,16 @@ class Shortcode
         $content .= "<h4 class='title'>" . esc_html($board->title) . "</h4>";
         $content .= "<p>" . esc_html($board->details) . "</p>";
         $content .= "</div>";
+        $content .= "<div class='input-group'>";
         $content .= "<form onsubmit='return false;'><input type='text' id='request-search' placeholder='Search using title or tags'></form>";
+        $content .= "<label for='status'>Status</label>";
+        $content .= "<select required id='feature-request-select'>";
+        $content .= "<option disabled selected='true'>Please select one</option>";
+        $content .= "<option value='published'>Published</option>";
+        $content .= "<option value='unpublished'>Unpublished</option>";
+        $content .= "<option value='pending'>Pending</option>";
+        $content .= "</select>";
+        $content .= "</div>";
         $content .= "</div>";
         //add form button
         if (is_user_logged_in()) {

@@ -17,6 +17,7 @@ class Models
     add_action('wp_ajax_wpsfb_delete_feature_board', [$this, 'wpsfb_delete_feature_board']);
 
     //feature request
+    add_action('wp_ajax_wpsfb_get_features_request_count', [$this, 'wpsfb_get_features_request_count']);
     add_action('wp_ajax_wpsfb_get_features_request_list', [$this, 'wpsfb_get_features_request_list']);
     add_action('wp_ajax_wpsfb_insert_feature_request', [$this, 'wpsfb_insert_feature_request']);
     add_action('wp_ajax_wpsfb_delete_feature_request', [$this, 'wpsfb_delete_feature_request']);
@@ -159,6 +160,22 @@ class Models
     return wp_send_json_success("Successfully deleted data", 200);
   }
 
+  public function wpsfb_get_features_request_count()
+  {
+    global $wpdb;
+
+    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $count = $wpdb->get_results(
+      $wpdb->prepare("SELECT COUNT(*) as count FROM wp_sfb_features_request AS fr WHERE fr.feature_board_id = %d", $id)
+    );
+
+    if (is_wp_error($count)) {
+      wp_send_json_error('Bad SQL request', 400);
+    }
+
+    wp_send_json_success($count, 200);
+  }
+
   public function wpsfb_insert_feature_request()
   {
     global $wpdb;
@@ -213,9 +230,13 @@ class Models
     global $wpdb;
 
     $id = isset($_POST['id']) ? $_POST['id'] : '';
+    $pageno = isset($_POST['pageno']) ? $_POST['pageno'] : 1;
+    $number = isset($_POST['reqPerPage']) ? isset($_POST['reqPerPage']) : 5;
+    $offset = ($pageno - 1) * $number;
+
     $defaults = [
-      'number' => 10,
-      'offset' => 0,
+      'offset' => $offset,
+      'number' => $number,
       'orderby' => 'id',
       'order' => 'ASC'
     ];
@@ -232,8 +253,6 @@ class Models
         $args['order'],
         $args['offset'],
         $args['number']
-
-        // SELECT fr.id, fr.title, fr.details, fr.status, GROUP_CONCAT(tg.tagname SEPARATOR ',') AS tags, u.user_login as username, vt.id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = 1 GROUP BY fr.id;
       )
     );
 

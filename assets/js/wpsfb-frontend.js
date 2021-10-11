@@ -21,8 +21,6 @@
       }
     });
 
-    pageno = pageno ? pageno : 1;
-
     $.ajax({
       type: 'POST',
       url: ajax_url.ajaxurl,
@@ -67,22 +65,10 @@
     $(".feature-request-content").append(html);
   }
 
-  $(document).on('click', '.paginate', function () {
-    pageno = $(this).attr('data-paginate-id');
-    renderRequest(pageno);
-  });
-
   $('.add-feature').click(function () {
     $('.feature-board-content').css('display', 'none');
     $('.request-details').css('display', 'none');
     $('.feature-add-content').css('display', 'block');
-  });
-
-  $(document).on('click', '.back-to-req', function () {
-    $('.feature-add-content').css('display', 'none');
-    $('.request-details').css('display', 'none');
-    $('.feature-board-content').css('display', 'block');
-    renderRequest();
   });
 
   $('#request-search').keyup(function (e) {
@@ -140,6 +126,34 @@
     });
   })
 
+  $('#feature-request-select').change(function (e) {
+    var status = e.target.value;
+
+    $.ajax({
+      type: 'POST',
+      url: ajax_url.ajaxurl,
+      data: {
+        action: 'wpsfb_get_feature_by_status',
+        status: status
+      },
+      success: function (data) {
+        renderRequestHtml(data.data);
+      }
+    });
+  });
+
+  $(document).on('click', '.paginate', function () {
+    pageno = $(this).attr('data-paginate-id');
+    renderRequest(pageno);
+  });
+
+  $(document).on('click', '.back-to-req', function () {
+    $('.feature-add-content').css('display', 'none');
+    $('.request-details').css('display', 'none');
+    $('.feature-board-content').css('display', 'block');
+    renderRequest();
+  });
+
   $(document).on('keyup', '.req-tags', function (e) {
     if (e.keyCode == 32) {
       var value = e.target.value.toUpperCase().trim();
@@ -184,8 +198,10 @@
           id: id
         },
         success: function (data) {
-          console.log(data);
           isUserVoted = data.data.length > 0;
+        },
+        error: function (err) {
+          console.log(err);
         }
       });
     }
@@ -201,6 +217,9 @@
         },
         success: function (data) {
           voteCount = data.data && data.data[0].vote_count;
+        },
+        error: function (err) {
+          console.log(err);
         }
       });
     }
@@ -216,6 +235,9 @@
         },
         success: function (data) {
           comments = data.data;
+        },
+        error: function (err) {
+          console.log(err);
         }
       });
     }
@@ -230,6 +252,9 @@
         },
         success: function (data) {
           isLoggedIn = data.user;
+        },
+        error: function (err) {
+          console.log(err);
         }
       });
     }
@@ -249,7 +274,7 @@
             var details = data.data.details;
             var status = data.data.status;
             var user = data.data.username;
-            var tagsArray = data.data.tags.split(',');
+            var tagsArray = data.data.tags ? data.data.tags.split(',') : 0;
 
             $('.feature-board-content').css('display', 'none');
             $(".request-details").html('');
@@ -261,11 +286,14 @@
             html += `<h4 class='single-feature-title'>${title}</h4>`;
             html += `<p class='single-feature-details'>${details}</p>`;
             html += `<p class='single-feature-status'>${status}</p>`;
-            html += `<p class='tags-wrapper'>`;
-            $.each(tagsArray, function (index, value) {
-              html += `<span>${value}</span>`;
-            });
-            html += `</p>`;
+
+            if (tagsArray != 0) {
+              html += `<p class='tags-wrapper'>`;
+              $.each(tagsArray, function (index, value) {
+                html += `<span>${value}</span>`;
+              });
+              html += `</p>`;
+            }
             html += `<p>Requested by <b>${user}</b></p>`;
             html += `</div>`;
             html += `<div class='vote'>`;
@@ -282,12 +310,6 @@
             html += `</div>`;
             html += `<div class="request-comments-wrapper">`;
             html += `<h6>Comments</h6>`;
-            $.each(comments, function (index, value) {
-              html += `<div class="request-comment">`;
-              html += `<p>${value.comment}</p>`;
-              html += `<p>${value.user_login}</p>`;
-              html += `</div>`;
-            });
             html += `<div>`;
             if (isLoggedIn) {
               html += `<form>`;
@@ -296,6 +318,13 @@
               html += `</form>`;
             }
             html += `</div>`;
+            $.each(comments, function (index, value) {
+              html += `<div class="request-comment">`;
+              html += `<p>${value.comment}</p>`;
+              html += `<p>${value.user_login}</p>`;
+              html += `</div>`;
+            });
+
             html += `</div>`;
 
             $(".request-details").append(html);
@@ -320,6 +349,9 @@
           $('.input-comment').val('');
           getComments();
           getRequests();
+        },
+        error: function (err) {
+          console.log(err);
         }
       });
     });
@@ -360,6 +392,8 @@
   $(document).on('click', '.login', function () {
     $('#login-form').css('display', 'block');
     $('.feature-board-content').css('display', 'none');
+    $('.request-details').css('display', 'none');
+
 
     $('#login-form').submit(function (e) {
       e.preventDefault();

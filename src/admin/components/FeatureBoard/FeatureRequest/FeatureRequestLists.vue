@@ -23,10 +23,10 @@
     <div v-if="error">{{ error }}</div>
     <table v-if="!showAddModal && !showEditModal" id="feature-table">
       <tr>
-        <th>Feature Request Title</th>
+        <th @click="sortTitle">Feature Request Title</th>
         <th>Feature Request Details</th>
         <th>Feature Request Tags</th>
-        <th>Status</th>
+        <th @click="sortStatus">Status</th>
         <th>Username</th>
         <th>Actions</th>
       </tr>
@@ -51,6 +51,15 @@
           </button>
         </td>
       </tr>
+      <div class="pagination">
+        <a
+          class="paginate"
+          v-for="page in totalPages"
+          :key="page"
+          @click="getFeatureRequest(page)"
+          >{{ page }}</a
+        >
+      </div>
     </table>
     <EditFeatureRequest
       :feature="feature"
@@ -73,6 +82,10 @@ export default {
       error: "",
       featureRequest: [],
       feature: {},
+      reqPerPage: 5,
+      totalCount: 0,
+      totalPages: 0,
+      pageno: 1,
     };
   },
   components: {
@@ -80,6 +93,16 @@ export default {
     EditFeatureRequest,
   },
   methods: {
+    sortTitle() {
+      const req = this.featureRequest.sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
+    },
+    sortStatus() {
+      const req = this.featureRequest.sort((a, b) =>
+        a.status.localeCompare(b.status)
+      );
+    },
     getFeatureToEdit(id) {
       this.showEditModal = true;
       const formData = new FormData();
@@ -118,15 +141,18 @@ export default {
         })
         .catch((err) => this.$alert("Something error happened"));
     },
-    getFeatureRequest() {
+    getFeatureRequest(pageno) {
+      pageno = pageno ? pageno : 1;
       const id = this.$route.params.id;
       const formData = new FormData();
       formData.append("action", "wpsfb_get_features_request_list");
       formData.append("id", id);
+      formData.append("pageno", pageno);
       axios
         .post(ajax_url.ajaxurl, formData)
         .then((res) => {
           this.featureRequest = res.data.data;
+          console.log(res.data.data);
           this.featureRequest.tags = this.featureRequest.tags
             ? this.featureRequest.tags.split(",")
             : [];
@@ -136,9 +162,27 @@ export default {
           console.log(err);
         });
     },
+    getFeatureRequestCount() {
+      const id = this.$route.params.id;
+      const formData = new FormData();
+      formData.append("action", "wpsfb_get_features_request_count");
+      formData.append("id", id);
+      axios
+        .post(ajax_url.ajaxurl, formData)
+        .then((res) => {
+          this.totalCount =
+            res.data.data[0] && parseInt(res.data.data[0].count);
+          this.totalPages = Math.ceil(this.totalCount / this.reqPerPage);
+        })
+        .catch((err) => {
+          this.error = "Error retriving data";
+          console.log(err);
+        });
+    },
   },
   created() {
     this.getFeatureRequest();
+    this.getFeatureRequestCount();
   },
 };
 </script>
