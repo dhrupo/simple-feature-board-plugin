@@ -113,10 +113,9 @@ final class WP_Feature_Board
     if (is_admin()) {
       new \WPSFB\Includes\Admin();
       new \WPSFB\Includes\Models();
-    } else {
-      new \WPSFB\Includes\FrontendModels();
-      new \WPSFB\Includes\Frontend();
     }
+    new \WPSFB\Includes\Frontend();
+    new \WPSFB\Includes\FrontendModels();
   }
 }
 

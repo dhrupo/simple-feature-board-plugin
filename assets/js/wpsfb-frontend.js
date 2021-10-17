@@ -47,14 +47,21 @@
       var title = value.title;
       var status = value.status;
       var user = value.username;
+      var commentCount = value.comment_count;
+      var voteCount = value.vote_count;
 
       $(".feature-request-content").html('');
       html += `<div data-request-id=${id} class='feature-request-list'>`;
+      html += `<div class="left-section">`;
       html += `<div class='title'>${title}</div>`;
       html += `<div class='bottom'>`;
-      html += `<span class='status'>${status}</span>`;
-      html += `<span class='user'>${user}</span>`;
+      html += `<div class='status'>${status}</div>`;
+      html += `<div class='user'>by ${user}</div>`;
       html += `</div>`;
+      html += `</div>`;
+      html += `<div class="right-section">`;
+      html += `<div><span class="dashicons dashicons-admin-comments"></span><span class="dashicon-text">${commentCount}</span></div>`;
+      html += `<div><span class="dashicons dashicons-tickets-alt"></span><span class="dashicon-text">${voteCount}</span></div>`;
       html += `</div>`;
       html += `</div>`;
     })
@@ -74,12 +81,14 @@
   $('#request-search').keyup(function (e) {
     // e.preventDefault();
     var search = e.target.value.trim().toUpperCase();
+    var nonce = $('#search-nonce').val();
     if (e.keyCode == 13) {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
           action: 'wpsfb_get_searched_feature',
+          nonce: nonce,
           id: id,
           search: search
         },
@@ -183,6 +192,7 @@
   });
 
   $(document).on('click', '.feature-request-list', function () {
+    var commentCount = 0;
     var voteCount = 0;
     var isUserVoted = false;
     var comments = [];
@@ -216,7 +226,7 @@
           id: id
         },
         success: function (data) {
-          voteCount = data.data && data.data[0].vote_count;
+          voteCount = data.data[0].vote_count;
         },
         error: function (err) {
           console.log(err);

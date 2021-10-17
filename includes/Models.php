@@ -245,9 +245,7 @@ class Models
 
     $items = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id
-        ORDER BY %s %s
-        LIMIT %d, %d",
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
         $id,
         $$args['orderby'],
         $args['order'],

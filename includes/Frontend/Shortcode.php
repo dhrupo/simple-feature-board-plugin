@@ -50,7 +50,10 @@ class Shortcode
         $content .= "<p>" . esc_html($board->details) . "</p>";
         $content .= "</div>";
         $content .= "<div class='input-group'>";
-        $content .= "<form onsubmit='return false;'><input type='text' id='request-search' placeholder='Search using title or tags'></form>";
+        $content .= "<form onsubmit='return false;'>";
+        $content .= "<input type='text' id='request-search' placeholder='Search using title or tags'>";
+        $content .= "<input type='hidden' id='search-nonce' value=" . htmlentities(wp_create_nonce('search-nonce')) . ">";
+        $content .= "</form>";
         $content .= "<label for='status'>Status</label>";
         $content .= "<select required id='feature-request-select'>";
         $content .= "<option disabled selected='true'>Please select one</option>";

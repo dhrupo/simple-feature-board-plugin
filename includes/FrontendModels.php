@@ -2,8 +2,6 @@
 
 namespace WPSFB\Includes;
 
-use WP_User;
-
 class FrontendModels
 {
   function __construct()
@@ -25,6 +23,8 @@ class FrontendModels
     add_action('wp_ajax_wpsfb_get_feature_requests_votes_count', [$this, 'wpsfb_get_feature_requests_votes_count']);
     add_action('wp_ajax_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
     add_action('wp_ajax_nopriv_wpsfb_get_feature_request_comments', [$this, 'wpsfb_get_feature_request_comments']);
+    add_action('wp_ajax_wpsfb_get_feature_request_comments_count', [$this, 'wpsfb_get_feature_request_comments_count']);
+    add_action('wp_ajax_nopriv_wpsfb_get_feature_request_comments_count', [$this, 'wpsfb_get_feature_request_comments_count']);
     add_action('wp_ajax_nopriv_wpsfb_is_logged_in', [$this, 'wpsfb_is_logged_in']);
     add_action('wp_ajax_wpsfb_is_logged_in', [$this, 'wpsfb_is_logged_in']);
     add_action('wp_ajax_wpsfb_sign_in', [$this, 'wpsfb_sign_in']);
@@ -136,11 +136,9 @@ class FrontendModels
 
     $items = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id
-        ORDER BY %s %s
-        LIMIT %d, %d",
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
         $id,
-        $$args['orderby'],
+        $args['orderby'],
         $args['order'],
         $args['offset'],
         $args['number']
@@ -265,6 +263,23 @@ class FrontendModels
     }
 
     return wp_send_json_success("Successfully deleted data", 200);
+  }
+
+  public function wpsfb_get_feature_request_comments_count()
+  {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sfb_comments';
+    $id = $_POST['id'];
+    $selected = $wpdb->get_results(
+      $wpdb->prepare(
+        "SELECT COUNT(*) as count FROM $table_name as c WHERE c.feature_request_id = %d",
+        $id
+      )
+    );
+    // if (!$selected) {
+    //   return wp_send_json_error("Error while getting comments", 500);
+    // }
+    return wp_send_json_success($selected, 200);
   }
 
   public function wpsfb_get_feature_request_comments()
@@ -401,29 +416,31 @@ class FrontendModels
   {
     global $wpdb;
 
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-    $search = sanitize_text_field(isset($_POST['search']) ? $_POST['search'] : '');
-    $defaults = [
-      'number' => 5,
-      'offset' => 0,
-      'orderby' => 'id',
-      'order' => 'ASC'
-    ];
+    if (check_ajax_referer('search-nonce', 'nonce')) {
+      $id = isset($_POST['id']) ? $_POST['id'] : '';
+      $search = sanitize_text_field(isset($_POST['search']) ? $_POST['search'] : '');
+      $defaults = [
+        'number' => 5,
+        'offset' => 0,
+        'orderby' => 'id',
+        'order' => 'ASC'
+      ];
 
-    $args = wp_parse_args($args, $defaults);
+      $args = wp_parse_args($args, $defaults);
 
-    $items = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.title LIKE '%$search%' OR tg.tagname LIKE '%$search%' GROUP BY fr.id
+      $items = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.title LIKE '%$search%' OR tg.tagname LIKE '%$search%' GROUP BY fr.id
         ORDER BY %s %s
         LIMIT %d, %d",
-        $id,
-        $$args['orderby'],
-        $args['order'],
-        $args['offset'],
-        $args['number']
-      )
-    );
+          $id,
+          $$args['orderby'],
+          $args['order'],
+          $args['offset'],
+          $args['number']
+        )
+      );
+    }
 
     if (is_wp_error($items)) {
       wp_send_json_error('Bad SQL request', 400);
@@ -435,14 +452,22 @@ class FrontendModels
   public function wpsfb_get_feature_by_status()
   {
     global $wpdb;
-    $status = isset($_POST['status']) ? $_POST['status'] : '';
+    if (isset($_POST['status'])) {
+      $valid_values = ['published', 'unpublished', 'pending'];
+      $get_status = sanitize_text_field($_POST['status']);
 
-    $items = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT * from wp_sfb_features_request as fr where fr.status=%s",
-        $status
-      )
-    );
+      if (in_array($get_status, $valid_values)) {
+        $status = $get_status;
+        $items = $wpdb->get_results(
+          $wpdb->prepare(
+            "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username from wp_sfb_features_request as fr left join wp_users as u on fr.user_id = u.ID where fr.status=%s",
+            $status
+          )
+        );
+      } else {
+        wp_send_json_error('Bad SQL request', 400);
+      }
+    }
 
     if (is_wp_error($items)) {
       wp_send_json_error('Bad SQL request', 400);
