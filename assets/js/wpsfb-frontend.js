@@ -1,23 +1,39 @@
 (function ($) {
   'use Strict';
-  var id = $('#feature-id').attr('data-board-id');
-  var reqTags = [];
+  var boardId = $('#feature-id').attr('data-board-id');
   var reqPerPage = 5;
   var totalCount = 0;
+  var user_id;
+
+  $.ajax({
+    type: 'POST',
+    url: ajax_url.ajaxurl,
+    data: {
+      action: 'wpsfb_frontend_is_logged_in'
+    },
+    success: function (data) {
+      user_id = data.user_id;
+    },
+    error: function (err) {
+      $('.error').text(err.responseJSON.data);
+    }
+  });
 
   function renderRequest(pageno) {
+    var pageNumber = pageno ? pageno : 1;
     $.ajax({
       type: 'POST',
       url: ajax_url.ajaxurl,
       data: {
-        action: 'wpsfb_get_features_request_count',
-        id: id,
+        action: 'wpsfb_frontend_get_features_request_count',
+        id: boardId,
+        wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
       },
       success: function (data) {
-        totalCount = parseInt(data.data[0].count);
+        totalCount = parseInt(data.data.count);
       },
       error: function (err) {
-        console.log(err);
+        $('.error').text(err.responseJSON.data);
       }
     });
 
@@ -25,16 +41,17 @@
       type: 'POST',
       url: ajax_url.ajaxurl,
       data: {
-        action: 'wpsfb_get_features_request_list',
-        id: id,
-        pageno: pageno
+        action: 'wpsfb_frontend_get_features_request_list',
+        id: boardId,
+        pageno: pageNumber,
+        wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
       },
       success: function (data) {
         var totalPages = Math.ceil(totalCount / reqPerPage);
         renderRequestHtml(data.data, totalPages);
       },
       error: function (err) {
-        console.log(err);
+        $('.error').text(err.responseJSON.data);
       }
     });
   }
@@ -42,16 +59,17 @@
 
   function renderRequestHtml(data, totalPages) {
     var html = '';
+    $(".feature-request-content").html('');
+
     $.each(data, function (index, value) {
-      var id = value.id;
+      var reqId = value.id;
       var title = value.title;
       var status = value.status;
       var user = value.username;
       var commentCount = value.comment_count;
       var voteCount = value.vote_count;
 
-      $(".feature-request-content").html('');
-      html += `<div data-request-id=${id} class='feature-request-list'>`;
+      html += `<div data-request-id=${reqId} class='feature-request-list'>`;
       html += `<div class="left-section">`;
       html += `<div class='title'>${title}</div>`;
       html += `<div class='bottom'>`;
@@ -78,61 +96,32 @@
     $('.feature-add-content').css('display', 'block');
   });
 
+  $('.paginate').click(function () {
+    pageno = $(this).attr('data-paginate-id');
+    renderRequest(pageno);
+  });
+
   $('#request-search').keyup(function (e) {
-    // e.preventDefault();
     var search = e.target.value.trim().toUpperCase();
-    var nonce = $('#search-nonce').val();
     if (e.keyCode == 13) {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_get_searched_feature',
-          nonce: nonce,
-          id: id,
-          search: search
+          action: 'wpsfb_frontend_get_searched_feature',
+          id: boardId,
+          search: search,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
           e.target.value = "";
           renderRequestHtml(data.data);
+        },
+        error: function (err) {
+          $('.error').text(err.responseJSON.data);
         }
       });
     }
-  })
-
-  $('#add-feature-request').submit(function (e) {
-    e.preventDefault();
-    var reqTitle = $('#feature-request-title').val().trim();
-    var reqDetails = $('#feature-request-details').val().trim();
-    var reqStatus = $('#feature-request-status').val().trim();
-
-    if (reqTags.length == 0) {
-      $('.tags-error').css('display', 'block');
-      return;
-    }
-
-    var jsonReqTags = JSON.stringify(reqTags).replace(/[\[\]"]+/g, "");
-    $.ajax({
-      type: 'POST',
-      url: ajax_url.ajaxurl,
-      data: {
-        action: 'wpsfb_insert_feature_request',
-        id: id,
-        title: reqTitle,
-        details: reqDetails,
-        tags: jsonReqTags,
-        status: reqStatus,
-      },
-      success: function (data) {
-        $('#feature-request-title').val('');
-        $('#feature-request-details').val('');
-        $('#feature-request-status').val('');
-        renderRequest();
-        $('.feature-add-content').css('display', 'none');
-        $('.feature-board-content').css('display', 'block');
-        $('.feature-request-content').css('display', 'block');
-      }
-    });
   })
 
   $('#feature-request-select').change(function (e) {
@@ -142,308 +131,298 @@
       type: 'POST',
       url: ajax_url.ajaxurl,
       data: {
-        action: 'wpsfb_get_feature_by_status',
-        status: status
+        action: 'wpsfb_frontend_get_feature_by_status',
+        status: status,
+        id: boardId,
+        wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
       },
       success: function (data) {
         renderRequestHtml(data.data);
+      },
+      error: function (err) {
+        $('.error').text(err.responseJSON.data);
       }
     });
   });
 
-  $(document).on('click', '.paginate', function () {
-    pageno = $(this).attr('data-paginate-id');
-    renderRequest(pageno);
-  });
+  $('#add-feature-request').submit(function (e) {
+    e.preventDefault();
+    var reqTitle = $('#feature-request-title').val().trim();
+    var reqDetails = $('#feature-request-details').val().trim();
 
-  $(document).on('click', '.back-to-req', function () {
+    $.ajax({
+      type: 'POST',
+      url: ajax_url.ajaxurl,
+      data: {
+        action: 'wpsfb_frontend_insert_feature_request',
+        id: id,
+        title: reqTitle,
+        details: reqDetails,
+        wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+      },
+      success: function (data) {
+        $('#feature-request-title').val('');
+        $('#feature-request-details').val('');
+        $('.feature-add-content').css('display', 'none');
+        renderRequest();
+        $('.feature-board-content').css('display', 'block');
+      },
+      error: function (err) {
+        $('.error').text(err.responseJSON.data);
+      }
+    });
+  })
+
+  $('.back-to-req').click(function () {
     $('.feature-add-content').css('display', 'none');
     $('.request-details').css('display', 'none');
-    $('.feature-board-content').css('display', 'block');
     renderRequest();
-  });
-
-  $(document).on('keyup', '.req-tags', function (e) {
-    if (e.keyCode == 32) {
-      var value = e.target.value.toUpperCase().trim();
-      !reqTags.includes(value) && reqTags.push(value);
-      e.target.value = '';
-      var html = '';
-      $('.show-tags').html('');
-      $.each(reqTags, function (index, value) {
-        html += `<span class='tag'>${value}</span>`;
-      });
-      if (reqTags.length > 0) {
-        $('.tags-error').css('display', 'none');
-      }
-      $(".show-tags").append(html);
-    }
-  });
-
-  $(document).on('click', '.tag', function (e) {
-    index = reqTags.indexOf(e.target.innerText);
-    reqTags.splice(index, 1);
-    var html = '';
-    $(".show-tags").html('');
-    $.each(reqTags, function (index, value) {
-      html += `<span class='tag'>${value}</span>`;
-    });
-    $(".show-tags").append(html);
+    $('.feature-board-content').css('display', 'block');
   });
 
   $(document).on('click', '.feature-request-list', function () {
-    var commentCount = 0;
-    var voteCount = 0;
     var isUserVoted = false;
     var comments = [];
-    var isLoggedIn = false;
     var id = $(this).attr('data-request-id');
+
+    $('.feature-board-content').css('display', 'none');
+    $('.request-details').css('display', 'block');
 
     function getVotedUser() {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_get_voted_user',
-          id: id
+          action: 'wpsfb_frontend_get_voted_user',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
-          isUserVoted = data.data.length > 0;
+          isUserVoted = data.data ? true : false;
         },
         error: function (err) {
-          console.log(err);
+          $('.error').text(err.responseJSON.data);
         }
       });
     }
     getVotedUser();
-
-    function getVotesCount() {
-      $.ajax({
-        type: 'POST',
-        url: ajax_url.ajaxurl,
-        data: {
-          action: 'wpsfb_get_feature_requests_votes_count',
-          id: id
-        },
-        success: function (data) {
-          voteCount = data.data[0].vote_count;
-        },
-        error: function (err) {
-          console.log(err);
-        }
-      });
-    }
-    getVotesCount();
 
     function getComments() {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_get_feature_request_comments',
-          id: id
+          action: 'wpsfb_frontend_get_feature_request_comments',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
           comments = data.data;
+
+          $('.request-comment').html('');
+          $('.add-comment').css('display', 'block');
+          $('.btn-edit-comment').css('display', 'none');
+
+          $.each(comments, function (index, value) {
+            var html = "";
+            html += `<div class='comment-details'>`;
+            html += `<p class='user-comment'>${value.comment}</p>`;
+            html += `<p class='user-name'> ${value.user_login}</p>`;
+            if (value.user_id == user_id) {
+              html += `<div><a comment-id=${value.id} class="edit-comment">Edit</a> | <a comment-id=${value.id} class="remove-comment">Delete</a></div>`;
+            }
+            html += `</div>`;
+
+            $('.request-details > .request-comments-wrapper > .request-comment').append(html);
+          });
         },
         error: function (err) {
-          console.log(err);
+          $('.error').text(err.responseJSON.data);
         }
       });
     }
     getComments();
 
-    function checkIsLoggedIn() {
+    $(document).on('click', '.edit-comment', function (e) {
+      e.stopImmediatePropagation();
+      var commentId = $(this).attr('comment-id');
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_is_logged_in',
+          action: 'wpsfb_frontend_get_single_feature_request_comment',
+          comment_id: commentId,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
-          isLoggedIn = data.user;
+          $('.input-comment').val(data.data.comment);
+          $('.btn-edit-comment').css('display', 'block');
+          $('.add-comment').css('display', 'none');
+
+          $('.btn-edit-comment').click(function (e) {
+            e.preventDefault();
+            var comment = $('.input-comment').val().trim();
+            var id = $('.request-details').attr('req-id');
+            $.ajax({
+              type: 'POST',
+              url: ajax_url.ajaxurl,
+              data: {
+                action: 'wpsfb_frontend_edit_feature_request_comment',
+                req_id: id,
+                comment_id: commentId,
+                comment: comment,
+                wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+              },
+              success: function () {
+                $('.input-comment').val('');
+                getComments();
+              },
+              error: function (err) {
+                $('.error').text(err.responseJSON.data);
+              }
+            });
+          })
         },
         error: function (err) {
-          console.log(err);
+          $('.error').text(err.responseJSON.data);
         }
       });
-    }
-    checkIsLoggedIn();
+    })
+
+    $(document).on('click', '.remove-comment', function (e) {
+      e.stopImmediatePropagation();
+      var commentId = $(this).attr('comment-id');
+      $.ajax({
+        type: 'POST',
+        url: ajax_url.ajaxurl,
+        data: {
+          action: 'wpsfb_frontend_remove_feature_request_comment',
+          comment_id: commentId,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+        },
+        success: function (data) {
+          getComments();
+        },
+        error: function (err) {
+          $('.error').text(err.responseJSON.data);
+        }
+      });
+    })
 
     function getRequests() {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_get_single_feature_request',
-          id: id
+          action: 'wpsfb_frontend_get_single_feature_request',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
-          setTimeout(function () {
-            var title = data.data.title;
-            var details = data.data.details;
-            var status = data.data.status;
-            var user = data.data.username;
-            var tagsArray = data.data.tags ? data.data.tags.split(',') : 0;
+          var id = data.data.id;
+          var title = data.data.title;
+          var details = data.data.details;
+          var status = data.data.status;
+          var user = data.data.username;
+          var tagsArray = data.data.tags ? data.data.tags.split(',') : 0;
+          var voteCount = data.data.vote_count;
 
-            $('.feature-board-content').css('display', 'none');
-            $(".request-details").html('');
-            $('.request-details').css('display', 'block');
-            var html = '';
-            html += `<button class='back-to-req'>Back</button>`;
-            html += `<div class='feature-vote-wrapper'>`;
-            html += `<div class='single-feature'>`;
-            html += `<h4 class='single-feature-title'>${title}</h4>`;
-            html += `<p class='single-feature-details'>${details}</p>`;
-            html += `<p class='single-feature-status'>${status}</p>`;
+          $('.request-details').attr('req-id', id);
 
-            if (tagsArray != 0) {
-              html += `<p class='tags-wrapper'>`;
-              $.each(tagsArray, function (index, value) {
-                html += `<span>${value}</span>`;
-              });
-              html += `</p>`;
-            }
-            html += `<p>Requested by <b>${user}</b></p>`;
-            html += `</div>`;
-            html += `<div class='vote'>`;
-            html += `<p class='vote-count'>Total votes: <b>${voteCount}</b></p>`;
-            if (isLoggedIn) {
-              if (isUserVoted) {
-                html += `<button class="remove-vote">Unvote</button>`;
-              }
-              else {
-                html += `<button class="add-vote">Vote</button>`;
-              }
-            }
-            html += `</div>`;
-            html += `</div>`;
-            html += `<div class="request-comments-wrapper">`;
-            html += `<h6>Comments</h6>`;
-            html += `<div>`;
-            if (isLoggedIn) {
-              html += `<form>`;
-              html += `<textarea placeholder='Add a comment...' rows='3' class="input-comment"></textarea>`;
-              html += `<button class='add-comment' type='submit'>comment</button>`;
-              html += `</form>`;
-            }
-            html += `</div>`;
-            $.each(comments, function (index, value) {
-              html += `<div class="request-comment">`;
-              html += `<p>${value.comment}</p>`;
-              html += `<p>${value.user_login}</p>`;
-              html += `</div>`;
+          $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-title').text(title);
+          $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-details').text(details);
+          $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-title').text(details);
+          $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-status').text(status);
+
+          if (tagsArray.length != 0) {
+            var tagsHtml = "";
+            $.each(tagsArray, function (index, value) {
+              tagsHtml = `<span>${value}</span>`;
             });
+            $('.request-details > .feature-vote-wrapper > .single-feature > .tags-wrapper').html('');
+            $('.request-details > .feature-vote-wrapper > .single-feature > .tags-wrapper').append(tagsHtml);
+          }
+          $('.request-details > .feature-vote-wrapper > .single-feature > .user > b').text(user);
 
-            html += `</div>`;
+          $('.request-details > .feature-vote-wrapper > .vote > .vote-count > b').text(voteCount);
 
-            $(".request-details").append(html);
-          }, 500)
+          var voteButtonHtml = "";
+          if (isUserVoted) {
+            voteButtonHtml += `<button class="btn remove-vote">Unvote</button>`;
+          }
+          else {
+            voteButtonHtml += `<button class="btn add-vote">Vote</button>`;
+          }
+          $('.request-details > .feature-vote-wrapper > .vote > .btn-check-vote').html('');
+          $('.request-details > .feature-vote-wrapper > .vote > .btn-check-vote').append(voteButtonHtml);
+        },
+        error: function (err) {
+          $('.error').text(err.responseJSON.data);
         }
       });
     }
     getRequests();
 
-    $(document).on('click', '.add-comment', function (e) {
+    $('.add-comment').off('click').on('click', function (e) {
       e.preventDefault();
       var comment = $('.input-comment').val().trim();
+      var id = $('.request-details').attr('req-id');
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_add_feature_request_comment',
+          action: 'wpsfb_frontend_add_feature_request_comment',
           id: id,
-          comment: comment
+          comment: comment,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function () {
           $('.input-comment').val('');
           getComments();
-          getRequests();
         },
         error: function (err) {
-          console.log(err);
+          $('.error').text(err.responseJSON.data);
         }
       });
     });
 
-    $(document).on('click', '.add-vote', function () {
-      $.ajax({
-        type: 'POST',
-        url: ajax_url.ajaxurl,
-        data: {
-          action: 'wpsfb_add_vote',
-          id: id
-        },
-        success: function () {
-          getVotedUser();
-          getVotesCount();
-          getRequests();
-        }
-      });
-    });
-
-    $(document).on('click', '.remove-vote', function () {
-      $.ajax({
-        type: 'POST',
-        url: ajax_url.ajaxurl,
-        data: {
-          action: 'wpsfb_remove_vote',
-          id: id
-        },
-        success: function () {
-          getVotedUser();
-          getVotesCount();
-          getRequests();
-        }
-      });
-    });
-  });
-
-  $(document).on('click', '.login', function () {
-    $('#login-form').css('display', 'block');
-    $('.feature-board-content').css('display', 'none');
-    $('.request-details').css('display', 'none');
-
-
-    $('#login-form').submit(function (e) {
-      e.preventDefault();
-      var username = $('#username').val();
-      var password = $('#password').val();
+    $(document).on('click', '.add-vote', function (e) {
+      e.stopImmediatePropagation();
+      var id = $('.request-details').attr('req-id');
 
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
         data: {
-          action: 'wpsfb_sign_in',
-          username: username,
-          password: password
+          action: 'wpsfb_frontend_add_vote',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
-          location.reload();
-        },
-        error: function (xhr) {
-          $('.login-error').text(JSON.parse(xhr.responseText).data);
+          isUserVoted = data.data ? true : false;
+          getRequests();
         }
-      })
-    })
-
-    $('.cancel').click(function () {
-      $('#login-form').css('display', 'none');
-      $('.feature-board-content').css('display', 'block');
+      });
     });
-  });
 
-  $(document).on('click', '.logout', function () {
-    $.ajax({
-      type: 'POST',
-      url: ajax_url.ajaxurl,
-      data: {
-        action: 'wpsfb_sign_out',
-      },
-      success: function (data) {
-        location.reload();
-      }
-    })
+    $(document).on('click', '.remove-vote', function (e) {
+      e.stopImmediatePropagation();
+      var id = $('.request-details').attr('req-id');
+
+      $.ajax({
+        type: 'POST',
+        url: ajax_url.ajaxurl,
+        data: {
+          action: 'wpsfb_frontend_remove_vote',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+        },
+        success: function (data) {
+          isUserVoted = data.data ? true : false;
+          getRequests();
+        }
+      });
+    });
   });
 })(jQuery)
 

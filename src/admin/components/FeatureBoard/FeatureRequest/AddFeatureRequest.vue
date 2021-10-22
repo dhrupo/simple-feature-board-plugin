@@ -1,6 +1,6 @@
 <template>
   <form v-on:submit.prevent="addFeature">
-    <h2 class="show-error">{{ this.error }}</h2>
+    <h2 class="show-error">{{ error }}</h2>
     <div class="input-group">
       <label for="feature-request-title">Feature Request Title</label>
       <input
@@ -24,11 +24,13 @@
     </div>
     <div class="input-group">
       <label for="status">Status</label>
-      <select v-model="status" id="status">
-        <option disabled value="">Please select one</option>
+      <select v-model="selectedStatus" id="status">
+        <option disabled>Please select one</option>
         <option value="published">Published</option>
         <option value="unpublished">Unpublished</option>
         <option value="pending">Pending</option>
+        <option value="planned">Planned</option>
+        <option selected value="under review">Under Review</option>
       </select>
     </div>
     <div class="input-group">
@@ -54,7 +56,6 @@
 </template>
 
 <script>
-import axios from "axios";
 export default {
   name: "AddFeature",
   data() {
@@ -70,45 +71,52 @@ export default {
   },
   methods: {
     addFeature() {
-      if (this.featureRequestTags.length < 0) {
-        this.error =
-          "Must have add feature tags to create a new feature Request";
-        return;
-      }
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_insert_feature_request");
-      formData.append("title", this.featureRequestTitle);
-      formData.append("details", this.featureRequestDetails);
-      formData.append("id", id);
-      formData.append("tags", this.featureRequestTags);
-      formData.append("status", this.status);
-      console.log(this.featureRequestTags);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.message = res.data.data;
-          this.$fire({
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_insert_feature_request",
+          boardId: id,
+          title: self.featureRequestTitle,
+          details: self.featureRequestDetails,
+          tags: self.featureRequestTags,
+          status: self.status,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.message = data.data;
+          self.$fire({
             title: "",
-            text: this.message,
+            text: self.message,
             type: "success",
-          }).then((okay) => {
-            if (okay) {
-              this.$router.go(0);
-            }
           });
-        })
-        .catch((err) =>
-          this.$alert("Error occured while posting data", "", "error")
-        );
+          self.$router.go(0);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     addTags() {
+      this.featureRequestTag = this.featureRequestTag.toUpperCase();
       !this.featureRequestTags.includes(this.featureRequestTag) &&
-        this.featureRequestTags.push(this.featureRequestTag.toUpperCase());
+        this.featureRequestTags.push(this.featureRequestTag);
       this.featureRequestTag = "";
     },
     removeTag(index) {
       this.featureRequestTags.splice(index, 1);
+    },
+  },
+  computed: {
+    selectedStatus: {
+      get() {
+        return (this.status = "under review");
+      },
+      set(value) {
+        this.status = value;
+      },
     },
   },
 };

@@ -1,3 +1,4 @@
+
 #vue-backend-app {
   margin-top: 20px;
 }
@@ -28,6 +29,7 @@
   width: 100%;
 }
 
+
 form[data-v-35ccfb62] {
   width: 60%;
   background-color: #eee;
@@ -57,6 +59,7 @@ form[data-v-35ccfb62]:hover {
   color: red;
 }
 
+
 form[data-v-1efb7cf9] {
   width: 50%;
   background-color: #eee;
@@ -82,6 +85,7 @@ form[data-v-1efb7cf9]:hover {
   background-color: #999;
   cursor: pointer;
 }
+
 
 #feature-table[data-v-0a1dc636] {
   width: 90%;
@@ -148,6 +152,12 @@ form[data-v-1efb7cf9]:hover {
   cursor: pointer;
 }
 
+
+.show-error {
+  color: red;
+}
+
+
 form[data-v-1cf6a503] {
   width: 60%;
   background-color: #eee;
@@ -177,6 +187,7 @@ form[data-v-1cf6a503]:hover {
   color: red;
 }
 
+
 form[data-v-db04162c] {
   width: 50%;
   background-color: #eee;
@@ -203,6 +214,7 @@ form[data-v-db04162c]:hover {
   cursor: pointer;
 }
 
+
 #feature-table[data-v-148ca665] {
   width: 90%;
   margin: 20px auto 0;
@@ -225,48 +237,33 @@ form[data-v-db04162c]:hover {
   cursor: pointer;
   background-color: #ccc;
 }
-.tooltip[data-v-148ca665] {
-  position: relative;
+.pagination[data-v-148ca665] {
   display: inline-block;
-  width: 100%;
 }
-.tooltip input[data-v-148ca665] {
-  width: 100%;
-  padding: 6px;
-  text-align: center;
-  border: 1px solid #222;
-  border-radius: 4px;
+.pagination a[data-v-148ca665] {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  border: 1px solid #ddd;
 }
-.tooltip .tooltip-text[data-v-148ca665] {
-  visibility: hidden;
-  width: 150px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 8px 0;
-  position: absolute;
-  z-index: 1;
-  bottom: 115%;
-  left: 50%;
-  margin-left: -60px;
+.pagination-active[data-v-148ca665] {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #4caf50;
 }
-.tooltip .tooltip-text[data-v-148ca665]::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: black transparent transparent transparent;
+.pagination a[data-v-148ca665]:hover:not(.active) {
+  background-color: #ddd;
 }
-.tooltip:hover .tooltip-text[data-v-148ca665] {
-  visibility: visible;
+.pagination a[data-v-148ca665]:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
-.tooltip input[data-v-148ca665]:hover {
-  cursor: pointer;
+.pagination a[data-v-148ca665]:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
+
 
 .feature-request-wrapper[data-v-3a796edc] {
   display: flex;
@@ -307,34 +304,3 @@ form textarea[data-v-3a796edc] {
   width: 100%;
 }
 
-.pagination {
-  display: inline-block;
-}
-
-.pagination a {
-  color: black;
-  float: left;
-  padding: 8px 16px;
-  text-decoration: none;
-  border: 1px solid #ddd;
-}
-
-.pagination-active {
-  background-color: #4caf50;
-  color: white;
-  border: 1px solid #4caf50;
-}
-
-.pagination a:hover:not(.active) {
-  background-color: #ddd;
-}
-
-.pagination a:first-child {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-.pagination a:last-child {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-}

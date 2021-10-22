@@ -34,25 +34,23 @@ class Models
     add_action('wp_ajax_wpsfb_get_voted_user', [$this, 'wpsfb_get_voted_user']);
     add_action('wp_ajax_wpsfb_add_vote', [$this, 'wpsfb_add_vote']);
     add_action('wp_ajax_wpsfb_remove_vote', [$this, 'wpsfb_remove_vote']);
-
-    // add_action('rest_api_init', function () {
-    //   register_rest_route('markers/v1', '/feature/', array(
-    //     'methods' => 'GET',
-    //     'callback' => [$this, 'wpsfb_get_feature_table_list']
-    //   ));
-    // });
   }
 
   public function wpsfb_admin_scripts()
   {
     wp_enqueue_script('wpsfb', WPSFB_ASSETS . '/js/simple-feature-board.js', null, WPSFB_VERSION, true);
     wp_localize_script('wpsfb', 'ajax_url', array(
-      'ajaxurl' => admin_url('admin-ajax.php')
+      'ajaxurl' => admin_url('admin-ajax.php'),
+      'wpsfb_nonce' => wp_create_nonce('wpsfb_ajax_nonce')
     ));
   }
 
   public function wpsfb_get_features_board_list($args = [])
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
 
     $defaults = [
@@ -85,11 +83,27 @@ class Models
 
   public function wpsfb_insert_feature_board()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
 
+    if (!empty($_POST['title'])) {
+      $title = sanitize_text_field($_POST['title']);
+    } else {
+      return wp_send_json_error("please enter title", 400);
+    }
+
+    if (!empty($_POST['details'])) {
+      $details = sanitize_text_field($_POST['details']);
+    } else {
+      return wp_send_json_error("please enter details", 400);
+    }
+
     $defaults = [
-      'details' => sanitize_text_field((isset($_POST['details']) ? $_POST['details'] : '')),
-      'title' => sanitize_textarea_field((isset($_POST['title']) ? $_POST['title'] : '')),
+      'details' => $details,
+      'title' => $title
     ];
 
     $table_name = $wpdb->prefix . 'sfb_features_board';
@@ -107,9 +121,14 @@ class Models
 
   public function wpsfb_get_single_feature_board()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_board';
     $id = $_POST['id'];
+
     $selected = $wpdb->get_row(
       $wpdb->prepare(
         "SELECT * FROM $table_name WHERE id = %d",
@@ -125,13 +144,36 @@ class Models
 
   public function wpsfb_edit_feature_board()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_board';
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
+
+    if (!empty($_POST['title'])) {
+      $title = sanitize_text_field($_POST['title']);
+    } else {
+      return wp_send_json_error("please enter title", 400);
+    }
+
+    if (!empty($_POST['details'])) {
+      $details = sanitize_text_field($_POST['details']);
+    } else {
+      return wp_send_json_error("please enter details", 400);
+    }
+
+    if (!empty($_POST['id'])) {
+      $id = sanitize_text_field($_POST['id']);
+    } else {
+      return wp_send_json_error("Something wrong happended", 400);
+    }
+
     $defaults = [
-      'details' => sanitize_textarea_field(isset($_POST['details']) ? $_POST['details'] : ''),
-      'title' => sanitize_text_field(isset($_POST['title']) ? $_POST['title'] : ''),
+      'title' => $title,
+      'details' => $details
     ];
+
     $where = ['id' => $id];
 
     $updated = $wpdb->update($table_name, $defaults, $where);
@@ -145,6 +187,10 @@ class Models
 
   public function wpsfb_delete_feature_board()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_board';
     $defaults = [
@@ -162,10 +208,19 @@ class Models
 
   public function wpsfb_get_features_request_count()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
 
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
-    $count = $wpdb->get_results(
+    if (!empty($_POST['id'])) {
+      $id = $_POST['id'];
+    } else {
+      return wp_send_json_error("Could not find any board id!", 400);
+    }
+
+    $count = $wpdb->get_row(
       $wpdb->prepare("SELECT COUNT(*) as count FROM wp_sfb_features_request AS fr WHERE fr.feature_board_id = %d", $id)
     );
 
@@ -178,15 +233,43 @@ class Models
 
   public function wpsfb_insert_feature_request()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
-    $id = $_POST['id'];
+
+    if (!empty($_POST['title'])) {
+      $title = sanitize_text_field($_POST['title']);
+    } else {
+      return wp_send_json_error("please enter title", 400);
+    }
+
+    if (!empty($_POST['details'])) {
+      $details = sanitize_text_field($_POST['details']);
+    } else {
+      return wp_send_json_error("please enter details", 400);
+    }
+
+    if (!empty($_POST['boardId'])) {
+      $boardId = $_POST['boardId'];
+    } else {
+      return wp_send_json_error("Could not find any board id!", 400);
+    }
+
+    if (!empty($_POST['status'])) {
+      $status = sanitize_text_field($_POST['status']);
+    } else {
+      $status = 'under review';
+    }
+
     $user_id = get_current_user_id();
-    $status = $_POST['status'];
+
     $defaults = [
-      'title' => sanitize_text_field((isset($_POST['title']) ? $_POST['title'] : '')),
-      'details' => sanitize_textarea_field((isset($_POST['details']) ? $_POST['details'] : '')),
+      'title' => $title,
+      'details' => $details,
       'status' => $status,
-      'feature_board_id' => $id,
+      'feature_board_id' => $boardId,
       'user_id' => $user_id
     ];
 
@@ -202,13 +285,8 @@ class Models
 
     $last_inserted_id = $wpdb->insert_id;
     $table_name2 = $wpdb->prefix . 'sfb_tags';
-    $tagString = [
-      'tagname' => sanitize_text_field((isset($_POST['tags']) ? $_POST['tags'] : ''))
-    ];
 
-    $tagArray = explode(',', $tagString['tagname']);
-
-    foreach ($tagArray as $tag) {
+    foreach ($_POST['tags'] as $tag) {
       $inserted2 = $wpdb->insert(
         $table_name2,
         [
@@ -218,18 +296,21 @@ class Models
       );
     }
 
-    if (!$inserted2) {
-      return wp_send_json_error("Error while posting data", 500);
-    }
-
     return wp_send_json_success("Successfully posted data", 200);
   }
 
   public function wpsfb_get_features_request_list($args = [])
   {
-    global $wpdb;
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
 
-    $id = isset($_POST['id']) ? $_POST['id'] : '';
+    global $wpdb;
+    if (!empty($_POST['id'])) {
+      $id = $_POST['id'];
+    } else {
+      return wp_send_json_error("Could not find any board id!", 400);
+    }
     $pageno = isset($_POST['pageno']) ? $_POST['pageno'] : 1;
     $number = isset($_POST['reqPerPage']) ? isset($_POST['reqPerPage']) : 5;
     $offset = ($pageno - 1) * $number;
@@ -263,12 +344,20 @@ class Models
 
   public function wpsfb_get_single_feature_request()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_request';
-    $id = $_POST['id'];
+    if (!empty($_POST['id'])) {
+      $id = $_POST['id'];
+    } else {
+      return wp_send_json_error("Could not find any feature request id!", 400);
+    }
     $selected = $wpdb->get_row(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_votes as vt ON vt.feature_request_id = fr.id WHERE fr.id = %d",
+        "SELECT fr.id, fr.title, fr.details, fr.status, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id WHERE fr.id = %d",
         $id
       )
     );
@@ -281,12 +370,16 @@ class Models
 
   public function wpsfb_get_single_feature_to_edit()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_request';
     $id = $_POST['id'];
     $selected = $wpdb->get_row(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.user_id, fr.feature_board_id, fr.user_id FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id WHERE fr.id = %d",
+        "SELECT fr.id, fr.title, fr.status, fr.details, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, fr.user_id, fr.feature_board_id, fr.user_id FROM $table_name as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id WHERE fr.id = %d",
         $id
       )
     );
@@ -299,66 +392,106 @@ class Models
 
   public function wpsfb_edit_feature_request()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
-    $table_name = $wpdb->prefix . 'sfb_features_request';
-    $id = $_POST['id'];
-    $feature_board_id =  $_POST['feature_board_id'];
-    $user_id =  $_POST['user_id'];
+
+    if (!empty($_POST['title'])) {
+      $title = sanitize_text_field($_POST['title']);
+    } else {
+      return wp_send_json_error("please enter title", 400);
+    }
+
+    if (!empty($_POST['details'])) {
+      $details = sanitize_text_field($_POST['details']);
+    } else {
+      return wp_send_json_error("please enter details", 400);
+    }
+
+    if (!empty($_POST['board_id'])) {
+      $board_id = $_POST['board_id'];
+    } else {
+      return wp_send_json_error("Could not find any feature board id!", 400);
+    }
+
+    if (!empty($_POST['status'])) {
+      $status = sanitize_text_field($_POST['status']);
+    } else {
+      $status = 'under review';
+    }
+
+    if (!empty($_POST['user_id'])) {
+      $user_id = sanitize_text_field($_POST['user_id']);
+    } else {
+      return wp_send_json_error("Could not find any user id!", 400);
+    }
+
+    if (!empty($_POST['id'])) {
+      $id = $_POST['id'];
+    } else {
+      return wp_send_json_error("Could not find any id!", 400);
+    }
 
     $defaults = [
-      'details' => sanitize_textarea_field(isset($_POST['details']) ? $_POST['details'] : ''),
-      'title' => sanitize_text_field(isset($_POST['title']) ? $_POST['title'] : ''),
-      'feature_board_id' => $feature_board_id,
+      'title' => $title,
+      'details' => $details,
+      'status' => $status,
+      'feature_board_id' => $board_id,
       'user_id' => $user_id
     ];
     $where = ['id' => $id];
 
+    $table_name = $wpdb->prefix . 'sfb_features_request';
     $updated = $wpdb->update($table_name, $defaults, $where);
 
     // if (!$updated) {
-    //   return wp_send_json_error("Error while updating feature table data", 500);
+    //   return wp_send_json_error("Error while updating feature request data", 500);
     // }
 
-    $table_name2 = $wpdb->prefix . 'sfb_tags';
-    $tagString = [
-      'tagname' => sanitize_text_field((isset($_POST['tags']) ? $_POST['tags'] : ''))
-    ];
+    $tags = $_POST['tags'];
+    if (!empty($tags)) {
+      $table_name2 = $wpdb->prefix . 'sfb_tags';
 
-    $tagArray = explode(',', $tagString['tagname']);
+      $exists = $wpdb->get_results(
+        $wpdb->prepare(
+          "SELECT tagname from $table_name2 WHERE feature_request_id = %d",
+          $id
+        )
+      );
 
-    $exists = $wpdb->get_results(
-      $wpdb->prepare(
-        "SELECT tagname from $table_name2 WHERE feature_request_id = %d",
-        $id
-      )
-    );
+      foreach ($tags as $tag) {
+        if (!in_array($tag, $exists)) {
+          $deleted = $wpdb->delete($table_name2, ['feature_request_id' => $id]);
+          break;
+        }
+      }
 
-    foreach ($tagArray as $tag) {
-      if (!in_array($tag, $exists)) {
-        $deleted = $wpdb->delete($table_name2, ['feature_request_id' => $id]);
-        break;
+      foreach ($tags as $tag) {
+        $replaced = $wpdb->insert(
+          $table_name2,
+          [
+            'tagname' => $tag,
+            'feature_request_id' => $id
+          ]
+        );
+      }
+
+      if (!$replaced) {
+        return wp_send_json_error("Error while updating feature tags", 500);
       }
     }
 
-    foreach ($tagArray as $tag) {
-      $replaced = $wpdb->insert(
-        $table_name2,
-        [
-          'tagname' => $tag,
-          'feature_request_id' => $id
-        ]
-      );
-    }
-
-    if (!$replaced) {
-      return wp_send_json_error("Error while updating feature requests", 500);
-    }
-
-    return wp_send_json_success("Successfully updated feature requests", 200);
+    return wp_send_json_success("Successfully update feature request", 200);
   }
 
   public function wpsfb_delete_feature_request()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_features_request';
     $defaults = [
@@ -376,6 +509,10 @@ class Models
 
   public function wpsfb_get_feature_request_comments()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_comments';
     $id = $_POST['id'];
@@ -393,6 +530,10 @@ class Models
 
   public function wpsfb_add_feature_request_comment()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $id = $_POST['id'];
     $user_id = get_current_user_id();
@@ -418,10 +559,14 @@ class Models
 
   public function wpsfb_get_feature_requests_votes_count()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_votes';
     $id = $_POST['id'];
-    $selected = $wpdb->get_results(
+    $selected = $wpdb->get_row(
       $wpdb->prepare(
         "SELECT COUNT(v.feature_request_id) as vote_count FROM $table_name as v WHERE v.feature_request_id = %d",
         $id
@@ -436,12 +581,16 @@ class Models
 
   public function wpsfb_get_voted_user()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_votes';
     $id = $_POST['id'];
     $current_user_id = get_current_user_id();
-    // $current_user_id = 5;
-    $selected = $wpdb->get_results(
+
+    $selected = $wpdb->get_row(
       $wpdb->prepare(
         "SELECT * FROM $table_name as v WHERE v.feature_request_id = %d AND v.user_id = %d",
         $id,
@@ -449,11 +598,19 @@ class Models
       )
     );
 
-    return wp_send_json_success($selected, 200);
+    if (empty($selected)) {
+      return wp_send_json_error(false, 200);
+    }
+
+    return wp_send_json_success(true, 200);
   }
 
   public function wpsfb_add_vote()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_votes';
     $id = $_POST['id'];
@@ -479,6 +636,10 @@ class Models
 
   public function wpsfb_remove_vote()
   {
+    if (!wp_verify_nonce($_POST['wpsfb_nonce'], 'wpsfb_ajax_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
     global $wpdb;
     $table_name = $wpdb->prefix . 'sfb_votes';
     $id = $_POST['id'];
@@ -489,13 +650,12 @@ class Models
       'user_id' => $current_user_id
     ];
 
-    // $current_user_id = 5;
-    $inserted = $wpdb->delete(
+    $deleted = $wpdb->delete(
       $table_name,
       $defaults
     );
 
-    if (!$inserted) {
+    if (!$deleted) {
       wp_send_json_error("Unsuccessful attempt to vote", 500);
     }
 

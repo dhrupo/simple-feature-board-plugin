@@ -7,21 +7,8 @@ class Shortcode
   protected $id;
   function __construct()
   {
-    add_action('wp_enqueue_scripts', [$this, 'add_scripts']);
     add_shortcode('wpsfb-feature-board', [$this, 'feature_board']);
   }
-
-  public function add_scripts()
-  {
-    wp_register_style('wpsfb-frontend-style', WPSFB_ASSETS . '/css/frontend.css', filemtime(WPSFB_PLUGIN_PATH . '/assets/css/frontend.css'));
-    wp_register_script('wpsfb-frontend-script', WPSFB_ASSETS . '/js/wpsfb-frontend.js', ['jquery'], filemtime(WPSFB_PLUGIN_PATH . '/assets/js/wpsfb-frontend.js'), true);
-    wp_enqueue_style('wpsfb-frontend-style');
-    wp_enqueue_script('wpsfb-frontend-script');
-    wp_localize_script('wpsfb-frontend-script', 'ajax_url', array(
-      'ajaxurl' => admin_url('admin-ajax.php')
-    ));
-  }
-
 
   public function feature_board($atts = [], $content = '')
   {
@@ -42,6 +29,7 @@ class Shortcode
       $content .= "<div class='wpsfb-shortcode-wrapper'>";
 
       if ($board) {
+        $content .= "<h2 class='error'></h2>";
         $content .= "<div class='feature-board-content'>";
         //board
         $content .= "<div class='feature-board-all'>";
@@ -54,15 +42,21 @@ class Shortcode
         $content .= "<input type='text' id='request-search' placeholder='Search using title or tags'>";
         $content .= "<input type='hidden' id='search-nonce' value=" . htmlentities(wp_create_nonce('search-nonce')) . ">";
         $content .= "</form>";
+        $content .= "<div class='input-group'>";
         $content .= "<label for='status'>Status</label>";
         $content .= "<select required id='feature-request-select'>";
         $content .= "<option disabled selected='true'>Please select one</option>";
+        $content .= "<option value='all'>All</option>";
         $content .= "<option value='published'>Published</option>";
         $content .= "<option value='unpublished'>Unpublished</option>";
         $content .= "<option value='pending'>Pending</option>";
+        $content .= "<option value='planned'>Planned</option>";
+        $content .= "<option value='under review'>Under Review</option>";
         $content .= "</select>";
         $content .= "</div>";
         $content .= "</div>";
+        $content .= "</div>";
+
         //add form button
         if (is_user_logged_in()) {
           $content .= "<button class='btn add-feature'>Add a feature request</button>";
@@ -82,21 +76,6 @@ class Shortcode
         $content .= "<label for='feature-request-details'>Feature Request Details</label>";
         $content .= "<textarea required id='feature-request-details' placeholder='Feature Request Details' cols='50' rows='5'></textarea>";
         $content .= "</div>";
-        $content .= "<div class='input-group'>";
-        $content .= "<label for='status'>Status</label>";
-        $content .= "<select required id='feature-request-status'>";
-        $content .= "<option disabled selected='true'>Please select one</option>";
-        $content .= "<option value='published'>Published</option>";
-        $content .= "<option value='unpublished'>Unpublished</option>";
-        $content .= "<option value='pending'>Pending</option>";
-        $content .= "</select>";
-        $content .= "</div>";
-        $content .= "<div class='input-group'>";
-        $content .= "<label for='feature-request-tags'>Feature Request Tags</label>";
-        $content .= "<input id='feature-request-tags' class='req-tags' type='text' placeholder='Add tags by space'/>";
-        $content .= "<div class='tags-error'>Tags can not be empty!</div>";
-        $content .= "</div>";
-        $content .= "<div class='show-tags'></div>";
         $content .= "<div class='btn-group'>";
         $content .= "<button type='submit' class='btn'>Add Feature Request</button>";
         $content .= "<button class='btn back-to-req'>Back To List</button>";
@@ -104,23 +83,36 @@ class Shortcode
         $content .= "</form>";
         $content .= "</div>";
 
-        $content .= "<div class='request-details'></div>";
-        $content .= "<div>";
+        $content .= "<div class='request-details'>";
+        $content .= "<button class='btn back-to-req'>Back</button>";
+        $content .= "<div class='feature-vote-wrapper'>";
+        $content .= "<div class='single-feature'>";
+        $content .= "<h4 class='single-feature-title'></h4>";
+        $content .= "<p class='single-feature-details'></p>";
+        $content .= "<p class='single-feature-status'></p>";
+        $content .= "<p class='tags-wrapper'></p>";
+        $content .= "<p class='user'>Requested by <b></b></p>";
+        $content .= "</div>";
 
-        //request login form
-        $content .= "<form id='login-form'>";
-        $content .= "<p class='login-error'></p>";
-        $content .= "<div class='input-group'>";
-        $content .= "<input required id='username' type='text' placeholder='Username'/>";
+        $content .= "<div class='vote'>";
+        $content .= "<p class='vote-count'>Total votes: <b></b></p>";
+        if (is_user_logged_in()) {
+          $content .= "<div class='btn-check-vote'></div>";
+        }
         $content .= "</div>";
-        $content .= "<div class='input-group'>";
-        $content .= "<input required id='password' type='password' placeholder='Password'/>";
         $content .= "</div>";
-        $content .= "<div class='btn-group'>";
-        $content .= "<button type='submit' class='btn loginCheck'>Login</button>";
-        $content .= "<button class='btn cancel'>Close</button>";
+
+        $content .= "<div class='request-comments-wrapper'>";
+        $content .= "<h6>Comments</h6>";
+        if (is_user_logged_in()) {
+          $content .= "<form>";
+          $content .= "<textarea placeholder='Add a comment...' rows='2' class='input-comment'></textarea>";
+          $content .= "<button class='btn add-comment' type='submit'>Comment</button>";
+          $content .= "<button class='btn btn-edit-comment' type='submit'>Edit</button>";
+          $content .= "</form>";
+        }
+        $content .= "<div class='request-comment'></div>";
         $content .= "</div>";
-        $content .= "</form>";
 
         return $content;
       } else {

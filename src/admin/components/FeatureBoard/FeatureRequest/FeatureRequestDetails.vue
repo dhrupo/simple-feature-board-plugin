@@ -1,6 +1,7 @@
 <template>
   <div>
     <button class="btn" @click="$router.go(-1)">Back</button>
+    <h2 class="show-error">{{ error }}</h2>
     <div class="feature-request-wrapper">
       <div>
         <h2>{{ featuresRequest.title }}</h2>
@@ -41,7 +42,6 @@
 </template>
 
 <script>
-import axios from "axios";
 export default {
   name: "FeatureRequestDetails",
   data() {
@@ -51,123 +51,146 @@ export default {
       comment: "",
       votesCount: "",
       isUserVoted: Boolean,
+      error: "",
     };
   },
   methods: {
     getFeatureRequestById() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_single_feature_request");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.featuresRequest = res.data.data;
-          this.featuresRequest.tags = this.featuresRequest.tags
-            ? this.featuresRequest.tags.split(",")
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_single_feature_request",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.featuresRequest = data.data;
+          self.featuresRequest.tags = self.featuresRequest.tags
+            ? self.featuresRequest.tags.split(",")
             : [];
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     getFeatureRequestComments() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_feature_request_comments");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.featuresRequestComments = res.data.data;
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_feature_request_comments",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.featuresRequestComments = data.data;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     getVotescount() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_feature_requests_votes_count");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.votesCount = res.data.data[0].vote_count;
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_feature_requests_votes_count",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.votesCount = data.data.vote_count;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     getVotedUser() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_voted_user");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.isUserVoted = res.data.data.length > 0;
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_voted_user",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.isUserVoted = data.data;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     addComment() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_add_feature_request_comment");
-      formData.append("id", id);
-      formData.append("comment", this.comment);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.$router.go(0);
-        })
-        .catch((err) => {
-          this.error = "Error while commenting";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_add_feature_request_comment",
+          id: id,
+          comment: self.comment,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.$router.go(0);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     vote() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_add_vote");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.$alert(res.data.data).then((okay) => {
-            if (okay) {
-              this.$router.go(0);
-            }
-          });
-        })
-        .catch((err) => {
-          this.$alert("Unsuccessful attempt to vote");
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_add_vote",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.$router.go(0);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     unvote() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_remove_vote");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.$alert(res.data.data).then((okay) => {
-            if (okay) {
-              this.$router.go(0);
-            }
-          });
-        })
-        .catch((err) => {
-          this.$alert("Unsuccessful attempt to remove vote");
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_remove_vote",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.$router.go(0);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
   },
   created() {

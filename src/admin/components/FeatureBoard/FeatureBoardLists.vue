@@ -45,13 +45,10 @@
           >
             Details
           </button>
-          <button
-            class="btn"
-            @click="() => deleteFeatureBoard(featureBoard.id)"
-          >
+          <button class="btn" @click="deleteFeatureBoard(featureBoard.id)">
             Delete
           </button>
-          <button class="btn" @click="() => getFeatureBoard(featureBoard.id)">
+          <button class="btn" @click="getFeatureBoard(featureBoard.id)">
             Edit
           </button>
         </td>
@@ -66,7 +63,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import AddFeatureBoard from "../FeatureBoard/AddFeatureBoard.vue";
 import EditFeatureBoard from "../FeatureBoard/EditFeatureBoard.vue";
 export default {
@@ -89,38 +85,46 @@ export default {
   },
   methods: {
     getFeatureBoard(id) {
-      this.showEditModal = true;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_single_feature_board");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.featureBoard = res.data.data;
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      self.showEditModal = true;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_single_feature_board",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.featureBoard = data.data;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     deleteFeatureBoard(id) {
-      this.$confirm("Are you want to delete the data?")
-        .then((okay) => {
-          if (okay) {
-            const formData = new FormData();
-            formData.append("action", "wpsfb_delete_feature_board");
-            formData.append("id", id);
-            axios
-              .post(ajax_url.ajaxurl, formData)
-              .then((res) => {
-                this.$router.go("/");
-              })
-              .catch((err) =>
-                this.$alert("Error occured while deleting data", "", "error")
-              );
-          }
-        })
-        .catch((err) => {});
+      var self = this;
+      self.$confirm("Are you want to delete the data?").then((okay) => {
+        if (okay) {
+          var self = this;
+          jQuery.ajax({
+            type: "POST",
+            url: ajax_url.ajaxurl,
+            data: {
+              action: "wpsfb_delete_feature_board",
+              id: id,
+              wpsfb_nonce: ajax_url.wpsfb_nonce,
+            },
+            success: function (data) {
+              self.$router.go("/");
+            },
+            error: function (err) {
+              self.$alert("Error occured while deleting data", "", "error");
+            },
+          });
+        }
+      });
     },
     copyShortcode(index) {
       const copy = this.$refs.copycode[index].value;

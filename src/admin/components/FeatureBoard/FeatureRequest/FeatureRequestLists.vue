@@ -20,7 +20,7 @@
       v-if="showAddModal"
       @closeAdd="showAddModal = false"
     ></AddFeatureRequest>
-    <div v-if="error">{{ error }}</div>
+    <h2 class="show-error">{{ error }}</h2>
     <table v-if="!showAddModal && !showEditModal" id="feature-table">
       <tr>
         <th @click="sortTitle">Feature Request Title</th>
@@ -70,7 +70,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import AddFeatureRequest from "./AddFeatureRequest.vue";
 import EditFeatureRequest from "./EditFeatureRequest.vue";
 export default {
@@ -104,80 +103,91 @@ export default {
       );
     },
     getFeatureToEdit(id) {
-      this.showEditModal = true;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_single_feature_to_edit");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.feature = res.data.data;
-          this.feature.tags = this.feature.tags
-            ? this.feature.tags.split(",")
+      var self = this;
+      self.showEditModal = true;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_single_feature_to_edit",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.feature = data.data;
+          self.feature.tags = self.feature.tags
+            ? self.feature.tags.split(",")
             : [];
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     deleteFeature(id) {
-      this.$confirm("Are you want to delete the data?")
-        .then((okay) => {
-          if (okay) {
-            const formData = new FormData();
-            formData.append("action", "wpsfb_delete_feature_request");
-            formData.append("id", id);
-            axios
-              .post(ajax_url.ajaxurl, formData)
-              .then((res) => {
-                this.$alert("Successfully Deleted the data");
-              })
-              .catch((err) =>
-                this.$alert("Error occured while deleting data", "", "error")
-              );
-          }
-          this.$router.go(0);
-        })
-        .catch((err) => this.$alert("Something error happened"));
+      var self = this;
+      self.$confirm("Are you want to delete the data?").then((okay) => {
+        if (okay) {
+          var self = this;
+          jQuery.ajax({
+            type: "POST",
+            url: ajax_url.ajaxurl,
+            data: {
+              action: "wpsfb_delete_feature_request",
+              id: id,
+              wpsfb_nonce: ajax_url.wpsfb_nonce,
+            },
+            success: function (data) {
+              self.$router.go("/");
+            },
+            error: function (err) {
+              self.$alert("Error occured while deleting data", "", "error");
+            },
+          });
+        }
+      });
     },
     getFeatureRequest(pageno) {
       pageno = pageno ? pageno : 1;
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_features_request_list");
-      formData.append("id", id);
-      formData.append("pageno", pageno);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.featureRequest = res.data.data;
-          console.log(res.data.data);
-          this.featureRequest.tags = this.featureRequest.tags
-            ? this.featureRequest.tags.split(",")
-            : [];
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_features_request_list",
+          id: id,
+          pageno: pageno,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.featureRequest = data.data;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     getFeatureRequestCount() {
-      const id = this.$route.params.id;
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_features_request_count");
-      formData.append("id", id);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.totalCount =
-            res.data.data[0] && parseInt(res.data.data[0].count);
-          this.totalPages = Math.ceil(this.totalCount / this.reqPerPage);
-        })
-        .catch((err) => {
-          this.error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      const id = self.$route.params.id;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_features_request_count",
+          id: id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.totalCount = data.data && parseInt(data.data.count);
+          self.totalPages = Math.ceil(self.totalCount / self.reqPerPage);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
   },
   created() {
@@ -215,51 +225,35 @@ export default {
   background-color: #ccc;
 }
 
-.tooltip {
-  position: relative;
+.pagination {
   display: inline-block;
-  width: 100%;
 }
 
-.tooltip input {
-  width: 100%;
-  padding: 6px;
-  text-align: center;
-  border: 1px solid #222;
-  border-radius: 4px;
+.pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  border: 1px solid #ddd;
 }
 
-.tooltip .tooltip-text {
-  visibility: hidden;
-  width: 150px;
-  background-color: black;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 8px 0;
-  position: absolute;
-  z-index: 1;
-  bottom: 115%;
-  left: 50%;
-  margin-left: -60px;
+.pagination-active {
+  background-color: #4caf50;
+  color: white;
+  border: 1px solid #4caf50;
 }
 
-.tooltip .tooltip-text::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: black transparent transparent transparent;
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
 }
 
-.tooltip:hover .tooltip-text {
-  visibility: visible;
+.pagination a:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
 }
 
-.tooltip input:hover {
-  cursor: pointer;
+.pagination a:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 </style>

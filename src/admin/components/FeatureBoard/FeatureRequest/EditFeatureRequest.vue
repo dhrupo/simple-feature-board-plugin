@@ -1,5 +1,6 @@
 <template>
-  <form v-on:submit.prevent="() => editFeatureRequest(feature.id)">
+  <form v-on:submit.prevent="editFeatureRequest(feature.id)">
+    <h2 class="show-error">{{ error }}</h2>
     <div class="input-group">
       <label for="feature-title">Feature Request Title</label>
       <input
@@ -24,11 +25,13 @@
     </div>
     <div class="input-group">
       <label for="status">Status</label>
-      <select v-model="status" id="status">
-        <option disabled value="">Please select one</option>
+      <select v-model="selectedStatus" id="status">
+        <option disabled>Please select one</option>
         <option value="published">Published</option>
         <option value="unpublished">Unpublished</option>
         <option value="pending">Pending</option>
+        <option value="planned">Planned</option>
+        <option value="under review">Under Review</option>
       </select>
     </div>
     <div class="input-group">
@@ -38,7 +41,7 @@
         @keyup.space="addTags"
         type="text"
         placeholder="Add tags by space"
-        v-model.trim="featureTag"
+        v-model.trim="featureRequestTag"
       />
     </div>
     <div>
@@ -54,58 +57,60 @@
 </template>
 
 <script>
-import axios from "axios";
 export default {
   name: "EditFeatureRequest",
   data() {
     return {
-      featureTag: "",
+      featureRequestTag: "",
+      error: "",
     };
   },
   props: {
     feature: Object,
   },
-  // computed: {
-  // featureTags: function() {
-  //   return this.feature.tags ? this.feature.tags.split(',') : [];
-  // }
-  // },
   methods: {
     editFeatureRequest(id) {
-      let formData = new FormData();
-      formData.append("action", "wpsfb_edit_feature_request");
-      formData.append("id", id);
-      formData.append("title", this.feature.title);
-      formData.append("details", this.feature.details);
-      formData.append("tags", this.feature.tags);
-      formData.append("feature_board_id", this.feature.feature_board_id);
-      formData.append("user_id", this.feature.user_id);
-
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.message = res.data.data;
-          this.$fire({
-            title: "",
-            text: this.message,
-            type: "success",
-          }).then((okay) => {
-            if (okay) {
-              this.$router.go(0);
-            }
-          });
-        })
-        .catch((err) =>
-          this.$alert("Error occured while posting data", "", "error")
-        );
+      var self = this;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_edit_feature_request",
+          id: id,
+          title: self.feature.title,
+          details: self.feature.details,
+          tags: self.feature.tags,
+          status: self.feature.status,
+          board_id: self.feature.feature_board_id,
+          user_id: self.feature.user_id,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.$router.go(0);
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
     addTags() {
-      !this.feature.tags.includes(this.featureTag) &&
-        this.feature.tags.push(this.featureTag.toUpperCase());
-      this.featureTag = "";
+      this.featureRequestTag = this.featureRequestTag.toUpperCase();
+      !this.feature.tags.includes(this.featureRequestTag) &&
+        this.feature.tags.push(this.featureRequestTag);
+      this.featureRequestTag = "";
     },
     removeTag(index) {
       this.feature.tags.splice(index, 1);
+    },
+  },
+  computed: {
+    selectedStatus: {
+      get() {
+        return this.feature.status;
+      },
+      set(value) {
+        this.feature.status = value;
+      },
     },
   },
 };

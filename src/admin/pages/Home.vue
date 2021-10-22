@@ -1,15 +1,15 @@
 <template>
   <div class="home">
-    <FeatureBoardLists
-      :featureBoardList="featureBoardList"
-      :error="error"
-    ></FeatureBoardLists>
-    <!-- <FeatureLists :featureList="featureList" :error="error"></FeatureLists> -->
+    <h1 class="show-error">{{ error }}</h1>
+    <div v-show="!error">
+      <FeatureBoardLists
+        :featureBoardList="featureBoardList"
+      ></FeatureBoardLists>
+    </div>
   </div>
 </template>
 
 <script>
-import axios from "axios";
 import FeatureBoardLists from "../components/FeatureBoard/FeatureBoardLists.vue";
 export default {
   name: "Home",
@@ -24,17 +24,21 @@ export default {
   },
   methods: {
     getFeatureBoardList() {
-      const formData = new FormData();
-      formData.append("action", "wpsfb_get_features_board_list");
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.featureBoardList = res.data.data;
-        })
-        .catch((err) => {
-          error = "Error retriving data";
-          console.log(err);
-        });
+      var self = this;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_get_features_board_list",
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.featureBoardList = data.data;
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
   },
   created() {
@@ -42,6 +46,8 @@ export default {
   },
 };
 </script>
-
-<style scoped>
+<style>
+.show-error {
+  color: red;
+}
 </style>

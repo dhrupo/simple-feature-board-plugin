@@ -1,5 +1,6 @@
 <template>
   <form v-on:submit.prevent="() => editFeatureBoard(featureBoard.id)">
+    <h2 class="show-error">{{ this.error }}</h2>
     <div class="input-group">
       <label for="feature-title">Feature Board Title</label>
       <input
@@ -30,39 +31,36 @@
 </template>
 
 <script>
-import axios from "axios";
 export default {
   name: "EditFeatureBoard",
   data() {
-    return {};
+    return {
+      error: "",
+    };
   },
   props: {
     featureBoard: Object,
   },
   methods: {
     editFeatureBoard(id) {
-      let formData = new FormData();
-      formData.append("action", "wpsfb_edit_feature_board");
-      formData.append("id", id);
-      formData.append("title", this.featureBoard.title);
-      formData.append("details", this.featureBoard.details);
-      axios
-        .post(ajax_url.ajaxurl, formData)
-        .then((res) => {
-          this.message = res.data.data;
-          this.$fire({
-            title: "",
-            text: this.message,
-            type: "success",
-          }).then((okay) => {
-            if (okay) {
-              this.$router.go("/");
-            }
-          });
-        })
-        .catch((err) =>
-          this.$alert("Error occured while posting data", "", "error")
-        );
+      var self = this;
+      jQuery.ajax({
+        type: "POST",
+        url: ajax_url.ajaxurl,
+        data: {
+          action: "wpsfb_edit_feature_board",
+          id: id,
+          title: self.featureBoard.title,
+          details: self.featureBoard.details,
+          wpsfb_nonce: ajax_url.wpsfb_nonce,
+        },
+        success: function (data) {
+          self.$router.go("/");
+        },
+        error: function (error) {
+          self.error = error.responseJSON.data;
+        },
+      });
     },
   },
 };
