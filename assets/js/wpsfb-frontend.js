@@ -59,6 +59,7 @@
 
   function renderRequestHtml(data, totalPages) {
     var html = '';
+    $(".error").css('display', 'none');
     $(".feature-request-content").html('');
 
     $.each(data, function (index, value) {
@@ -145,7 +146,7 @@
     });
   });
 
-  $('#add-feature-request').submit(function (e) {
+  $('#add-feature-request').click(function (e) {
     e.preventDefault();
     var reqTitle = $('#feature-request-title').val().trim();
     var reqDetails = $('#feature-request-details').val().trim();
@@ -155,7 +156,7 @@
       url: ajax_url.ajaxurl,
       data: {
         action: 'wpsfb_frontend_insert_feature_request',
-        id: id,
+        id: boardId,
         title: reqTitle,
         details: reqDetails,
         wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
@@ -169,11 +170,12 @@
       },
       error: function (err) {
         $('.error').text(err.responseJSON.data);
+        $(".error").css('display', 'block');
       }
     });
   })
 
-  $('.back-to-req').click(function () {
+  $('.back-to-req').click(function (e) {
     $('.feature-add-content').css('display', 'none');
     $('.request-details').css('display', 'none');
     renderRequest();
@@ -207,7 +209,7 @@
     }
     getVotedUser();
 
-    function getComments() {
+    function getComments(id) {
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
@@ -218,7 +220,6 @@
         },
         success: function (data) {
           comments = data.data;
-
           $('.request-comment').html('');
           $('.add-comment').css('display', 'block');
           $('.btn-edit-comment').css('display', 'none');
@@ -241,11 +242,13 @@
         }
       });
     }
-    getComments();
+    getComments(id);
 
     $(document).on('click', '.edit-comment', function (e) {
       e.stopImmediatePropagation();
       var commentId = $(this).attr('comment-id');
+      var id = $('.feature-request-list').attr('data-request-id');
+
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
@@ -258,30 +261,32 @@
           $('.input-comment').val(data.data.comment);
           $('.btn-edit-comment').css('display', 'block');
           $('.add-comment').css('display', 'none');
+        },
+        error: function (err) {
+          $('.error').text(err.responseJSON.data);
+        }
+      });
+    })
 
-          $('.btn-edit-comment').click(function (e) {
-            e.preventDefault();
-            var comment = $('.input-comment').val().trim();
-            var id = $('.request-details').attr('req-id');
-            $.ajax({
-              type: 'POST',
-              url: ajax_url.ajaxurl,
-              data: {
-                action: 'wpsfb_frontend_edit_feature_request_comment',
-                req_id: id,
-                comment_id: commentId,
-                comment: comment,
-                wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
-              },
-              success: function () {
-                $('.input-comment').val('');
-                getComments();
-              },
-              error: function (err) {
-                $('.error').text(err.responseJSON.data);
-              }
-            });
-          })
+    $('.btn-edit-comment').click(function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var comment = $('.input-comment').val().trim();
+      var commentId = $('.edit-comment').attr('comment-id');
+      var id = $('.request-details').attr('req-id');
+      $.ajax({
+        type: 'POST',
+        url: ajax_url.ajaxurl,
+        data: {
+          action: 'wpsfb_frontend_edit_feature_request_comment',
+          req_id: id,
+          comment_id: commentId,
+          comment: comment,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+        },
+        success: function () {
+          $('.input-comment').val('');
+          getComments(id);
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
@@ -292,6 +297,7 @@
     $(document).on('click', '.remove-comment', function (e) {
       e.stopImmediatePropagation();
       var commentId = $(this).attr('comment-id');
+      var id = $('.request-details').attr('req-id');
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
@@ -301,7 +307,7 @@
           wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
         },
         success: function (data) {
-          getComments();
+          getComments(id);
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
@@ -365,6 +371,7 @@
 
     $('.add-comment').off('click').on('click', function (e) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       var comment = $('.input-comment').val().trim();
       var id = $('.request-details').attr('req-id');
       $.ajax({
@@ -378,7 +385,7 @@
         },
         success: function () {
           $('.input-comment').val('');
-          getComments();
+          getComments(id);
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
@@ -400,7 +407,7 @@
         },
         success: function (data) {
           isUserVoted = data.data ? true : false;
-          getRequests();
+          getRequests(id);
         }
       });
     });

@@ -5,6 +5,11 @@
   font-size: 1.5rem;
 }
 
+.error {
+  color: #f13b3b;
+  display: none;
+}
+
 .feature-board-all {
   display: flex;
   justify-content: space-between;

@@ -27,9 +27,9 @@ class Shortcode
       );
 
       $content .= "<div class='wpsfb-shortcode-wrapper'>";
+      $content .= "<h2 class='error'></h2>";
 
       if ($board) {
-        $content .= "<h2 class='error'></h2>";
         $content .= "<div class='feature-board-content'>";
         //board
         $content .= "<div class='feature-board-all'>";
@@ -106,7 +106,7 @@ class Shortcode
         $content .= "<h6>Comments</h6>";
         if (is_user_logged_in()) {
           $content .= "<form>";
-          $content .= "<textarea placeholder='Add a comment...' rows='2' class='input-comment'></textarea>";
+          $content .= "<textarea required placeholder='Type a comment...' rows='2' class='input-comment'></textarea>";
           $content .= "<button class='btn add-comment' type='submit'>Comment</button>";
           $content .= "<button class='btn btn-edit-comment' type='submit'>Edit</button>";
           $content .= "</form>";

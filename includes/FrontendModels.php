@@ -227,7 +227,7 @@ class FrontendModels
 
     $selected = $wpdb->get_row(
       $wpdb->prepare(
-        "SELECT c.id, c.comment from $table_name as c WHERE c.id = %d",
+        "SELECT c.id, c.comment, c.feature_request_id from $table_name as c WHERE c.id = %d",
         $comment_id
       )
     );
@@ -320,7 +320,7 @@ class FrontendModels
       $where
     );
 
-    return wp_send_json_success("Successfully added comments", 200);
+    return wp_send_json_success("Successfully edited comments", 200);
   }
 
   public function wpsfb_frontend_remove_feature_request_comment()
