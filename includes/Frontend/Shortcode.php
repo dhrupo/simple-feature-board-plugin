@@ -27,7 +27,7 @@ class Shortcode
       );
 
       $content .= "<div class='wpsfb-shortcode-wrapper'>";
-      $content .= "<h2 class='error'></h2>";
+      $content .= "<h3 class='error'></h3>";
 
       if ($board) {
         $content .= "<div class='feature-board-content'>";
@@ -77,8 +77,26 @@ class Shortcode
         $content .= "<textarea required id='feature-request-details' placeholder='Feature Request Details' cols='50' rows='5'></textarea>";
         $content .= "</div>";
         $content .= "<div class='btn-group'>";
-        $content .= "<button type='submit' class='btn'>Add Feature Request</button>";
+        $content .= "<button type='submit' class='btn add-feature'>Add Feature Request</button>";
         $content .= "<button class='btn back-to-req'>Back To List</button>";
+        $content .= "</div>";
+        $content .= "</form>";
+        $content .= "</div>";
+
+        //request edit form
+        $content .= "<div class='feature-edit-content'>";
+        $content .= "<form id='edit-feature-request'>";
+        $content .= "<div class='input-group'>";
+        $content .= "<label for='edit-feature-request-title'>Feature Request Title</label>";
+        $content .= "<input required id='edit-feature-request-title' type='text' placeholder='Feature Request Title'/>";
+        $content .= "</div>";
+        $content .= "<div class='input-group'>";
+        $content .= "<label for='edit-feature-request-details'>Feature Request Details</label>";
+        $content .= "<textarea required id='edit-feature-request-details' placeholder='Feature Request Details' cols='50' rows='5'></textarea>";
+        $content .= "</div>";
+        $content .= "<div class='btn-group'>";
+        $content .= "<button type='submit' class='btn edit-feature'>Edit Feature Request</button>";
+        $content .= "<button class='btn edit-back'>Back</button>";
         $content .= "</div>";
         $content .= "</form>";
         $content .= "</div>";
@@ -92,6 +110,7 @@ class Shortcode
         $content .= "<p class='single-feature-status'></p>";
         $content .= "<p class='tags-wrapper'></p>";
         $content .= "<p class='user'>Requested by <b></b></p>";
+        $content .= "<div class='control-div'></div>";
         $content .= "</div>";
 
         $content .= "<div class='vote'>";
@@ -112,6 +131,26 @@ class Shortcode
           $content .= "</form>";
         }
         $content .= "<div class='request-comment'></div>";
+        $content .= "</div>";
+
+        $content .= "<div class='delete-modal'>";
+        $content .= "<div class='delete-modal-container'>";
+        $content .= "<p>Are you sure you want to delete?</p>";
+        $content .= "<div class='btn-group'>";
+        $content .= "<button class='btn btn-cancel'>Cancel</button>";
+        $content .= "<button class='btn btn-delete'>Delete</button>";
+        $content .= "</div>";
+        $content .= "</div>";
+        $content .= "</div>";
+
+        $content .= "<div class='req-delete-modal'>";
+        $content .= "<div class='delete-modal-container'>";
+        $content .= "<p>Are you sure you want to delete?</p>";
+        $content .= "<div class='btn-group'>";
+        $content .= "<button class='btn btn-req-cancel'>Cancel</button>";
+        $content .= "<button class='btn btn-req-delete'>Delete</button>";
+        $content .= "</div>";
+        $content .= "</div>";
         $content .= "</div>";
 
         return $content;

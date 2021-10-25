@@ -20,6 +20,9 @@ class FrontendModels
     add_action('wp_ajax_nopriv_wpsfb_frontend_insert_feature_request', [$this, 'wpsfb_frontend_insert_feature_request']);
     add_action('wp_ajax_wpsfb_frontend_get_single_feature_request', [$this, 'wpsfb_frontend_get_single_feature_request']);
     add_action('wp_ajax_nopriv_wpsfb_frontend_get_single_feature_request', [$this, 'wpsfb_frontend_get_single_feature_request']);
+    add_action('wp_ajax_wpsfb_frontend_get_single_feature_to_edit', [$this, 'wpsfb_frontend_get_single_feature_to_edit']);
+    add_action('wp_ajax_wpsfb_frontend_edit_feature_request', [$this, 'wpsfb_frontend_edit_feature_request']);
+    add_action('wp_ajax_wpsfb_frontend_delete_feature_request', [$this, 'wpsfb_frontend_delete_feature_request']);
     add_action('wp_ajax_wpsfb_frontend_get_feature_request_comments', [$this, 'wpsfb_frontend_get_feature_request_comments']);
     add_action('wp_ajax_nopriv_wpsfb_frontend_get_feature_request_comments', [$this, 'wpsfb_frontend_get_feature_request_comments']);
     add_action('wp_ajax_wpsfb_frontend_get_single_feature_request_comment', [$this, 'wpsfb_frontend_get_single_feature_request_comment']);
@@ -146,7 +149,7 @@ class FrontendModels
 
     $items = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, u.ID as user_id, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
         $id,
         $args['orderby'],
         $args['order'],
@@ -188,6 +191,102 @@ class FrontendModels
     return wp_send_json_success($selected, 200);
   }
 
+  public function wpsfb_frontend_get_single_feature_to_edit()
+  {
+    if (!wp_verify_nonce($_POST['wpsfb_frontend_nonce'], 'wpsfb_ajax_frontend_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sfb_features_request';
+    $id = $_POST['id'];
+    $user_id = get_current_user_id();
+    $selected = $wpdb->get_row(
+      $wpdb->prepare(
+        "SELECT fr.id, fr.title, fr.status, fr.details, fr.feature_board_id, fr.user_id FROM $table_name as fr WHERE fr.id = %d AND fr.user_id = %d",
+        $id,
+        $user_id
+      )
+    );
+    if (!$selected) {
+      return wp_send_json_error("Error while deleting data", 500);
+    }
+
+    return wp_send_json_success($selected, 200);
+  }
+
+  public function wpsfb_frontend_edit_feature_request()
+  {
+    if (!wp_verify_nonce($_POST['wpsfb_frontend_nonce'], 'wpsfb_ajax_frontend_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
+    global $wpdb;
+
+    if (!empty($_POST['title'])) {
+      $title = sanitize_text_field($_POST['title']);
+    } else {
+      return wp_send_json_error("please enter title", 400);
+    }
+
+    if (!empty($_POST['details'])) {
+      $details = sanitize_text_field($_POST['details']);
+    } else {
+      return wp_send_json_error("please enter details", 400);
+    }
+
+    $board_id = $_POST['board_id'];
+    $status = sanitize_text_field($_POST['status']);
+    $user_id = get_current_user_id();
+
+    if (!empty($_POST['id'])) {
+      $id = $_POST['id'];
+    } else {
+      return wp_send_json_error("Could not find any id!", 400);
+    }
+
+    $defaults = [
+      'title' => $title,
+      'details' => $details,
+      'status' => $status,
+      'feature_board_id' => $board_id,
+      'user_id' => $user_id
+    ];
+    $where = ['id' => $id, 'user_id' => $user_id];
+
+    $table_name = $wpdb->prefix . 'sfb_features_request';
+    $updated = $wpdb->update($table_name, $defaults, $where);
+
+    if (!$updated) {
+      return wp_send_json_error("Error while updating feature request data", 500);
+    }
+
+    return wp_send_json_success("Successfully update feature request", 200);
+  }
+
+  public function wpsfb_frontend_delete_feature_request()
+  {
+    if (!wp_verify_nonce($_POST['wpsfb_frontend_nonce'], 'wpsfb_ajax_frontend_nonce')) {
+      return wp_send_json_error('Busted! Please login!', 400);
+    }
+
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'sfb_features_request';
+
+    $defaults = [
+      'id' => $_POST['id'],
+      'user_id' => get_current_user_id()
+    ];
+
+    $deleted = $wpdb->delete($table_name, $defaults);
+
+    if (!$deleted) {
+      return wp_send_json_error("Error while deleting data", 500);
+    }
+
+    return wp_send_json_success("Successfully deleted data", 200);
+  }
+
   public function wpsfb_frontend_get_feature_request_comments()
   {
     if (!wp_verify_nonce($_POST['wpsfb_frontend_nonce'], 'wpsfb_ajax_frontend_nonce')) {
@@ -227,7 +326,7 @@ class FrontendModels
 
     $selected = $wpdb->get_row(
       $wpdb->prepare(
-        "SELECT c.id, c.comment, c.feature_request_id from $table_name as c WHERE c.id = %d",
+        "SELECT c.id, c.comment, c.feature_request_id, c.user_id from $table_name as c WHERE c.id = %d",
         $comment_id
       )
     );
@@ -470,7 +569,7 @@ class FrontendModels
 
     $items = $wpdb->get_results(
       $wpdb->prepare(
-        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes as v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.title LIKE '%$search%' OR tg.tagname LIKE '%$search%' GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
+        "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, u.ID as user_id, GROUP_CONCAT(DISTINCT tg.tagname SEPARATOR ',') AS tags, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_sfb_tags AS tg ON fr.id = tg.feature_request_id JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes as v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d AND fr.title LIKE '%$search%' OR tg.tagname LIKE '%$search%' GROUP BY fr.id ORDER BY %s %s LIMIT %d, %d",
         $id,
         $$args['orderby'],
         $args['order'],
@@ -479,8 +578,8 @@ class FrontendModels
       )
     );
 
-    if (!$items) {
-      wp_send_json_error('Bad SQL request', 400);
+    if (count($items) == 0) {
+      return wp_send_json(['data' => 'No such request found'], 200);
     }
 
     wp_send_json_success($items, 200);
@@ -512,19 +611,19 @@ class FrontendModels
       if ($get_status == 'all') {
         $items = $wpdb->get_results(
           $wpdb->prepare(
-            "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY id ASC",
+            "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, u.ID as user_id, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count, fr.feature_board_id FROM `wp_sfb_features_request` as fr LEFT JOIN wp_users as u ON u.ID = fr.user_id LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id WHERE fr.feature_board_id = %d GROUP BY fr.id ORDER BY id ASC",
             $id
           )
         );
       } else {
         $items = $wpdb->get_results(
           $wpdb->prepare(
-            "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count from wp_sfb_features_request as fr left join wp_users as u on fr.user_id = u.ID LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id where fr.status=%s GROUP BY fr.id",
+            "SELECT fr.id, fr.title, fr.details, fr.status, u.user_login as username, u.ID as user_id, COUNT(DISTINCT c.id) as comment_count, COUNT(DISTINCT v.id) as vote_count from wp_sfb_features_request as fr left join wp_users as u on fr.user_id = u.ID LEFT JOIN wp_sfb_comments AS c ON c.feature_request_id = fr.id LEFT JOIN wp_sfb_votes AS v ON v.feature_request_id = fr.id where fr.status=%s GROUP BY fr.id",
             $status
           )
         );
         if (count($items) == 0) {
-          return wp_send_json("No request available for this status", 200);
+          return wp_send_json(['data' => "No request available for this status"], 200);
         }
       }
     } else {

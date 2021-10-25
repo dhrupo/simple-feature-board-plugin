@@ -16,11 +16,13 @@
     },
     error: function (err) {
       $('.error').text(err.responseJSON.data);
+      $(".error").css('display', 'block');
     }
   });
 
   function renderRequest(pageno) {
-    var pageNumber = pageno ? pageno : 1;
+    $(".error").css('display', 'none');
+
     $.ajax({
       type: 'POST',
       url: ajax_url.ajaxurl,
@@ -34,9 +36,11 @@
       },
       error: function (err) {
         $('.error').text(err.responseJSON.data);
+        $(".error").css('display', 'block');
       }
     });
 
+    var pageNumber = pageno ? pageno : 1;
     $.ajax({
       type: 'POST',
       url: ajax_url.ajaxurl,
@@ -52,6 +56,7 @@
       },
       error: function (err) {
         $('.error').text(err.responseJSON.data);
+        $(".error").css('display', 'block');
       }
     });
   }
@@ -62,6 +67,10 @@
     $(".error").css('display', 'none');
     $(".feature-request-content").html('');
 
+    if (typeof data === 'string') {
+      $(".feature-request-content").html(data);
+      return;
+    }
     $.each(data, function (index, value) {
       var reqId = value.id;
       var title = value.title;
@@ -97,7 +106,7 @@
     $('.feature-add-content').css('display', 'block');
   });
 
-  $('.paginate').click(function () {
+  $(document).on('click', '.paginate', function () {
     pageno = $(this).attr('data-paginate-id');
     renderRequest(pageno);
   });
@@ -120,6 +129,7 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     }
@@ -142,11 +152,12 @@
       },
       error: function (err) {
         $('.error').text(err.responseJSON.data);
+        $(".error").css('display', 'block');
       }
     });
   });
 
-  $('#add-feature-request').click(function (e) {
+  $('#add-feature-request').submit(function (e) {
     e.preventDefault();
     var reqTitle = $('#feature-request-title').val().trim();
     var reqDetails = $('#feature-request-details').val().trim();
@@ -176,7 +187,9 @@
   })
 
   $('.back-to-req').click(function (e) {
+    e.preventDefault();
     $('.feature-add-content').css('display', 'none');
+    $('.feature-edit-content').css('display', 'none');
     $('.request-details').css('display', 'none');
     renderRequest();
     $('.feature-board-content').css('display', 'block');
@@ -204,12 +217,14 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     }
     getVotedUser();
 
     function getComments(id) {
+      $(".error").css('display', 'none');
       $.ajax({
         type: 'POST',
         url: ajax_url.ajaxurl,
@@ -239,15 +254,107 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     }
     getComments(id);
 
+    $(document).on('click', '.remove-request', function (e) {
+      e.stopImmediatePropagation();
+      $('.req-delete-modal').css('display', 'block');
+      // var reqId = $(this).attr('req-id');
+      $('.btn-req-delete').click(function () {
+        $.ajax({
+          type: 'POST',
+          url: ajax_url.ajaxurl,
+          data: {
+            action: 'wpsfb_frontend_delete_feature_request',
+            id: id,
+            wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+          },
+          success: function (data) {
+            $('.req-delete-modal').css('display', 'none');
+            $('.request-details').css('display', 'none');
+            renderRequest();
+            $('.feature-board-content').css('display', 'block');
+          },
+          error: function (err) {
+            $('.error').text(err.responseJSON.data);
+            $(".error").css('display', 'block');
+          }
+        });
+      })
+      $('.btn-req-cancel').click(function () {
+        $('.req-delete-modal').css('display', 'none');
+      })
+    });
+
+    $(document).on('click', '.edit-request', function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      $('.feature-board-content').css('display', 'none');
+      $('.request-details').css('display', 'none');
+      $('.feature-edit-content').css('display', 'block');
+      var reqId = $(this).attr('req-id');
+      $.ajax({
+        type: 'POST',
+        url: ajax_url.ajaxurl,
+        data: {
+          action: 'wpsfb_frontend_get_single_feature_to_edit',
+          id: id,
+          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+        },
+        success: function (data) {
+          $('#edit-feature-request-title').val(data.data.title);
+          $('#edit-feature-request-details').val(data.data.details);
+
+          $('.edit-feature').on('click', function (e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            var title = $('#edit-feature-request-title').val();
+            var details = $('#edit-feature-request-details').val();
+            $.ajax({
+              type: 'POST',
+              url: ajax_url.ajaxurl,
+              data: {
+                action: 'wpsfb_frontend_edit_feature_request',
+                id: reqId,
+                title: title,
+                details: details,
+                status: data.data.status,
+                board_id: data.data.feature_board_id,
+                wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+              },
+              success: function (data) {
+                $('.feature-edit-content').css('display', 'none');
+                getRequests();
+                $('.request-details').css('display', 'block');
+              },
+              error: function (err) {
+                $('.error').text(err.responseJSON.data);
+                $(".error").css('display', 'block');
+              }
+            })
+          })
+          $('.edit-back').click(function (e) {
+            e.preventDefault();
+            $('.feature-edit-content').css('display', 'none');
+            $('.request-details').css('display', 'block');
+          })
+        },
+        error: function (err) {
+          $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
+        }
+      });
+    });
+
     $(document).on('click', '.edit-comment', function (e) {
       e.stopImmediatePropagation();
       var commentId = $(this).attr('comment-id');
       var id = $('.feature-request-list').attr('data-request-id');
+      $(".error").css('display', 'none');
 
       $.ajax({
         type: 'POST',
@@ -264,6 +371,7 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     })
@@ -271,6 +379,7 @@
     $('.btn-edit-comment').click(function (e) {
       e.preventDefault();
       e.stopImmediatePropagation();
+      $(".error").css('display', 'none');
       var comment = $('.input-comment').val().trim();
       var commentId = $('.edit-comment').attr('comment-id');
       var id = $('.request-details').attr('req-id');
@@ -290,6 +399,7 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     })
@@ -298,21 +408,30 @@
       e.stopImmediatePropagation();
       var commentId = $(this).attr('comment-id');
       var id = $('.request-details').attr('req-id');
-      $.ajax({
-        type: 'POST',
-        url: ajax_url.ajaxurl,
-        data: {
-          action: 'wpsfb_frontend_remove_feature_request_comment',
-          comment_id: commentId,
-          wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
-        },
-        success: function (data) {
-          getComments(id);
-        },
-        error: function (err) {
-          $('.error').text(err.responseJSON.data);
-        }
-      });
+
+      $('.delete-modal').css('display', 'block');
+      $('.btn-delete').click(function () {
+        $.ajax({
+          type: 'POST',
+          url: ajax_url.ajaxurl,
+          data: {
+            action: 'wpsfb_frontend_remove_feature_request_comment',
+            comment_id: commentId,
+            wpsfb_frontend_nonce: ajax_url.wpsfb_frontend_nonce,
+          },
+          success: function (data) {
+            $('.delete-modal').css('display', 'none');
+            getComments(id);
+          },
+          error: function (err) {
+            $('.error').text(err.responseJSON.data);
+            $(".error").css('display', 'block');
+          }
+        });
+      })
+      $('.btn-cancel').click(function () {
+        $('.delete-modal').css('display', 'none');
+      })
     })
 
     function getRequests() {
@@ -337,7 +456,6 @@
 
           $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-title').text(title);
           $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-details').text(details);
-          $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-title').text(details);
           $('.request-details > .feature-vote-wrapper > .single-feature > .single-feature-status').text(status);
 
           if (tagsArray.length != 0) {
@@ -359,11 +477,20 @@
           else {
             voteButtonHtml += `<button class="btn add-vote">Vote</button>`;
           }
+
+          var editDeleteButtonHtml = "";
+          if (data.data.user_id == user_id) {
+            editDeleteButtonHtml += `<div><a req-id=${id} class="edit-request">Edit</a> | <a req-id=${id} class="remove-request">Delete</a></div>`;
+          }
+
           $('.request-details > .feature-vote-wrapper > .vote > .btn-check-vote').html('');
           $('.request-details > .feature-vote-wrapper > .vote > .btn-check-vote').append(voteButtonHtml);
+          $('.request-details > .feature-vote-wrapper > .single-feature >.control-div').html('');
+          $('.request-details > .feature-vote-wrapper > .single-feature >.control-div').append(editDeleteButtonHtml);
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     }
@@ -389,6 +516,7 @@
         },
         error: function (err) {
           $('.error').text(err.responseJSON.data);
+          $(".error").css('display', 'block');
         }
       });
     });
